@@ -12,7 +12,7 @@ The purpose of this project is mainly to scrape press releases from [Presseporta
 
 The simplest way of scraping press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/) is to use the function **get_blaulicht_data()** from the module **ppRunner**. This function downloads and processes every press release from every newsroom in the given federal states and years of interest.
 
-In the following example, the function is used to download all press releases from 2020 (years=2020) posted by police departments (dept_type="police") in Baden-Württemberg (states="baden-württemberg"). A folder named "ppp_bw_crime_and_elections" (output_folder_name="ppp_bw_crime_and_elections") will be created within the project folder and all data will be stored in it.
+In the following example, the function is used to download all press releases from 2020 (years=2020) posted by police departments (dept_type="police") in Baden-Württemberg (states="baden-württemberg"). A folder named "ppp_bw" (output_folder_name="ppp_bw") will be created within the project folder and all data will be stored in it.
 
 ```python
 from src import ppRunner as ppr
