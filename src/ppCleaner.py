@@ -22,7 +22,10 @@ def extract_article_data(html, newsroom_nr):
     OUTPUT
     data: dict containing the extracted informations
     """
-    
+
+    # url
+    article_link = html.find("meta", {"name":"og:url"})["content"]
+
     # institution / newsroom
     institution = html.find("a", "story-customer").text
     
@@ -72,7 +75,7 @@ def extract_article_data(html, newsroom_nr):
     topic_tags_scores = [tag["data-score"] for tag in topic_tags]
     
     data = {
-        # "scraping_datetime": datetime.datetime.now(),
+        "article_link": article_link,
         "newsroom_nr": newsroom_nr,
         "from_presseportal": 1,
         "newsroom": institution,
@@ -87,6 +90,7 @@ def extract_article_data(html, newsroom_nr):
         }
     
     return data
+
 
 def html_to_df(state, year, output_folder_name):
     utils.print_status("start converting raw html files to datasets.")

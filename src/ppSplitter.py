@@ -1,10 +1,12 @@
-import pandas as pd
-import os
-import pickle
 import copy
+import os
 from pathlib import Path
+import pickle
+
+import pandas as pd
 
 import src
+
 
 MIN_LEN = 200
 LOCATION_LIST = pickle.load(open(
