@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup as bs
 import pandas as pd
 
 import src
-from src import ppSplitterFunctions
+from src import ppSplitter
 from src import utils
 
 
@@ -198,5 +198,5 @@ def split_reports_bw(state, year, output_folder_name):
     )
 
     df = pd.read_csv(Path.joinpath(folder_path, state + "_" + year + ".csv"))
-    df_split = splitter.split_reports_in_df(df, "text")
+    df_split = ppSplitter.split_reports_in_df(df, "text")
     df_split.to_csv(Path.joinpath(folder_path, state + "_" + year + "_split.csv"), index = False)

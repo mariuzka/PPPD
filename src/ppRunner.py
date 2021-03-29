@@ -1,8 +1,8 @@
 import datetime
 
 import src
-from src import ppScraperFunctions as pps
-from src import ppCleanerFunctions as ppc
+from src import ppScraper as pps
+from src import ppCleaner as ppc
 
 
 def get_blaulicht_data(
@@ -21,7 +21,10 @@ def get_blaulicht_data(
     Make sure you have a stable internet connection and enough free space on your hard drive.
 
     INPUT
-    states: The state of interest (str) or a list of states of interest.
+    states: The state of interest (str) or a list of states of interest. 
+            Possible states: "nordrhein-westfalen", "niedersachsen", "baden-württemberg", "rheinland-pfalz", "schleswig-holstein",
+            "hessen", "mecklenburg-vorpommern", "saarland", "bayern", "thüringen", "sachsen", "berlin/brandenburg",
+            "hamburg", "bremen", "bundesbehörden", "sachsen-anhalt")
     years: The year of interest (int) or a list of years of interest.
     dept_type: The department type of interest ("police", "fire dept.", "customs", "other").
     output_folder_name: The name of the folder in which all the data shall be stored.
