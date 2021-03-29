@@ -31,7 +31,7 @@ The arguments *states* and *years* can both be either a single value or a list o
 from src import ppRunner as ppr
 
 ppr.get_blaulicht_data(
-    states=["baden-württemberg", "hessen", "niedersachesen"],                         
+    states=["baden-württemberg", "hessen", "niedersachsen"],                         
     years=[2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021],                                         
     dept_type="police",
     output_folder_name="example_project",
