@@ -1,17 +1,18 @@
-from bs4 import BeautifulSoup as bs
-import requests
-import pandas as pd
 import datetime
-import time
-import random
 import os
 from pathlib import Path
+import random
+import time
+
+from bs4 import BeautifulSoup as bs
+import pandas as pd
+import requests
 
 import src
 from src import utils
 
-LINK_BASE = "https://www.presseportal.de/"
 
+LINK_BASE = "https://www.presseportal.de/"
 
 ###############################################################################
 # functions for scraping on department level
@@ -22,16 +23,16 @@ def get_dept_data():
     FUNCTION
     This function collects informations of all departments listed on this page: 
     "https://www.presseportal.de/blaulicht/dienststellen".
-    For every department found on the page, the scraper goes to the newsroom of 
+    For each department found on the page, the scraper visits the newsroom of 
     the dept and collects further information about the newsroom.
     The resulting dataset is the starting point for scraping the articles of all
-    newsrooms. Articles and departments are linked by the "newsroom_nr".
+    newsrooms.
     
     INPUT
     None
     
     OUTPUT
-    data: a dataframe containing the informations about depts
+    df: a dataframe containing the informations about depts
     """
     
     utils.print_status("start scraping list of departments.")
@@ -110,11 +111,8 @@ def get_dept_data():
 
 
 ###############################################################################
-
 # functions for scraping on article level
-
 ###############################################################################
-
 
 def search_by_newsroom_and_date(newsroom_link, date):
     """
@@ -145,8 +143,7 @@ def one_day_of_a_newsroom(newsroom_nr, date, blaulicht):
     FUNCTION
     Goes to webpage of the newsroom which is referenced by its newsroom_nr,
     searches for all articles of a day (by using the search_by_newsroom_and_date()),
-    loads each article found and extracts the information from the html (by using
-    extract_article_data()).
+    saves each raw html in a list and returns this list.
     
     INPUT
     newsroom_nr: ...
@@ -155,18 +152,11 @@ def one_day_of_a_newsroom(newsroom_nr, date, blaulicht):
                 on presseportal.
     
     OUTPUT
-    output_dict: dict that contains a list with the unmodified html of every article of that day
-                   and a list of dicts with informations extracted from each article-html
-        raw_html: list of the raw html
-        extracted_data: list of dicts each containing information about one article of that day
-    
+    raw_html_list: list of the raw html
     """
 
-    output_dict = {
-        "extracted_data": [],
-        "raw_html": [],
-        }
-    
+    raw_html_list = []
+
     # build link to newsroom
     newsroom_link = LINK_BASE + ("blaulicht/nr/" if blaulicht else "nr/") + newsroom_nr
     
@@ -175,10 +165,11 @@ def one_day_of_a_newsroom(newsroom_nr, date, blaulicht):
     
     # for each article link
     for i, link in enumerate(article_links_per_day):
+        # get html
         article_html = utils.get_html(link)
-        output_dict["raw_html"].append(str(article_html))
+        raw_html_list.append(str(article_html))
 
-    return output_dict
+    return raw_html_list
 
 
 def error_handler(
@@ -191,30 +182,19 @@ def error_handler(
     """
     FUNCTION
     This function is called in presseportal_crawler().
-    If an error occurs, it either freezes the program for 20 secs (sleep_time) 
-    or inserts informations about the error into the database.
-    What happens depends on the value of error_counter, which counts how often
-    the error_handler was called for this specific error.
+    If an error occurs, it freezes the program for X secs (sleep_time) and then tries the same task again.
+    If the same tasks fails too often (>max_retries), the task is skipped and informations about the error are saved
+    in an error file.
     
     INPUT
     error_counter: integer
     error_infos: dict which contains informations about the error
-    sleep_time: amount of seconds, the program is freezed after an error occurs
+    sleep_time: amount of seconds the program is freezed after an error occurs
     max_retries: maximum number of tries the program tries to execute the failing command
-    
     
     OUTPUT
     keep_running: Logical Value. True if the maximum number of retries was not reached.
     """
-    
-    print(" ")
-    print("####################################################")
-    print(" ERROR ", " /// ", "Retries: ", error_counter, "/", max_retries)
-    print(" ")
-    print(error_infos["error_type"])
-    print(" ")
-    print("####################################################")
-    print(" ")
     
     if error_counter <= max_retries:
         time.sleep(sleep_time)
@@ -223,7 +203,6 @@ def error_handler(
     else:
         print(" ")
         print("ERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        print(" ")
         print(" ")
         
         txt_file = open("errors.txt", "a", encoding = "utf-8")
@@ -249,15 +228,15 @@ def presseportal_crawler(
     FUNCTION
     Main function for scraping articles from presseportal.
     It takes a single newsroom_nr or a list of newsrooms_nrs and the start date and 
-    end date as inputs and collects all articles from all newsrooms for every date.
-    It uses the functions defined above.
-    In addition it inserts the collected data into the databank.
-    If an error occurs while scraping the data the function waits am moment and then
-    tries it again for 20 times.    
+    end date as inputs and collects all articles from all newsrooms for each given date.
+    It saves the raw html files in the given folder (data_folder_path).
+    If an error occurs while scraping the data the function waits a moment and then
+    tries it again for X times.    
     
     INPUT
     newsroom_nr: ...
     start_date: start date as a datetime object
+    data_folder_path: path to folder where the collected data shall be saved
     end_date: end date as a datetime object
     blaulicht: are the newsroom part of the Blaulicht section on Presseportal?
     
@@ -265,10 +244,9 @@ def presseportal_crawler(
     None
     """
     
-    ###########################################################################
-    # step 1: check and transform input-values
-    ###########################################################################
-    
+    # create logbook
+    logbook = utils.Logbook(data_folder_path, "log_"+utils.get_str_dt()+".txt")
+
     # put link-number in a list, if it was inserted as a single number
     list_of_newsroom_nr = ( [newsroom_nr] if type(newsroom_nr) in [int, str] else newsroom_nr )
     
@@ -281,17 +259,13 @@ def presseportal_crawler(
     # create list of dates
     dates_to_scrape = utils.dates_between(start_date, end_date)
 
-    # measures of progress
-    number_of_newsroom_dates = len(list_of_newsroom_nr) * len(dates_to_scrape)
-    done = 0
-
     ###########################################################################
-    # step 2: collect every article for every day and every newsroom
+    # collect every article for every day and every newsroom
     ###########################################################################
     
     # for each newsroom respectively newsroom_nr
     for newsroom_counter, newsroom_nr in enumerate(list_of_newsroom_nr):
-        utils.print_status("scraping articles from newsroom " + str(newsroom_nr))
+        logbook.write_entry("scraping articles from newsroom " + str(newsroom_nr))
             
         # for every date
         for date in dates_to_scrape:
@@ -301,20 +275,21 @@ def presseportal_crawler(
             year_data_folder_path = Path.joinpath(data_folder_path, str(date.year))
             utils.create_folder(year_data_folder_path)
 
+            # reset error counter
             error_counter = 0
             try_it = True
             
             while try_it == True:
                 
                 try:
-                    # get daily data
-                    data_of_one_day = one_day_of_a_newsroom(newsroom_nr, date, blaulicht)
+                    # get daily html data
+                    html_of_one_day = one_day_of_a_newsroom(newsroom_nr, date, blaulicht)
 
                      # save raw html on disk
-                    for i, raw_html in enumerate(data_of_one_day["raw_html"]):
+                    for i, raw_html in enumerate(html_of_one_day):
+                        # name the html file
                         str_date = str(date.year) + "-" + str(date.month) + "-" + str(date.day)
-                        now = datetime.datetime.now()
-                        str_scraping_datetime = str(now.year) + "-" + str(now.month) + "-" + str(now.day) + "-" + str(now.hour) + "-" + str(now.minute)
+                        str_scraping_datetime = utils.get_str_dt()
                         html_file_name = newsroom_nr + "_" + str_date + "_" + str(i) + "_" + str_scraping_datetime + ".txt"
                         
                         # Ordner für newsroom_nr anlegen
@@ -328,7 +303,7 @@ def presseportal_crawler(
                         else:
                             duplicate = False
                             
-                        # Datei speichern
+                        # save file
                         if not update or (not duplicate and update):
                             file_path = Path.joinpath(newsroom_year_data_folder_path, html_file_name)
                             txt_file = open(file_path, "w", encoding = "utf-8")
@@ -336,7 +311,6 @@ def presseportal_crawler(
                             txt_file.close()
     
                     try_it = False
-                
                 
                 except Exception as error:
                     error_counter += 1
@@ -346,12 +320,13 @@ def presseportal_crawler(
                         "date": date,
                         "error_datetime": datetime.datetime.now(),
                         }
-                    
+                    logbook.write_entry("error_counter:" + " " + str(error_counter) + " " + str(error_infos))
                     try_it = error_handler(error_counter, error_infos)
                     
-    utils.print_status("finished scraping articles.")
+    logbook.write_entry("finished scraping articles.")
 
-def run_ppScraper(
+
+def scrape_blaulicht(
     state,
     dept_type,
     output_folder_name,
@@ -361,17 +336,41 @@ def run_ppScraper(
     update=True,
     dept_df=None,
     ):
+    """
+    FUNCTION
+    Simplifies the scraping of "presseportal.de/blaulicht" by combining functions for scraping
+    on department level and on article level.
+    Use this function to get the raw html of all blaulicht-articles for a certain state/department-type/period.
+
+    INPUT
+    state: The federal state of interest
+    dept_type: The type of departments that shall be scraped. Types are "police", "fire dept.", "customs", "other"
+    output_folder_name: Name of the folder in which all the data should be stored.
+    year: The year of interest. You can either define a year or start_date and end_date.
+    start_date: ...
+    end_date: ...
+    update: If True: A certain html file will be saved only if there is no html file for the same article yet.
+    dept_df: If you want to use an already downloaded dataframe containing department level informations 
+                (output of the function "get_dept_data()"), insert it here.
+
+    OUTPUT
+    None
+    """
 
     assert year or start_date and end_date
     assert dept_type in ("police", "fire dept.", "customs", "other")
     
+    state = state.lower()
+
     if year:
         start_date = datetime.date(year, 1, 1)
         end_date = datetime.date(year, 12, 31)
 
+    # create some important paths
     data_folder = Path.joinpath(src.PATH, "output_data", output_folder_name)
     state_data_folder = Path.joinpath(data_folder, "PMs", "raw_article_html", state)
     
+    # create folder structure
     utils.create_folder(Path.joinpath(src.PATH, "output_data"))
     utils.create_folder(data_folder)
     utils.create_folder(Path.joinpath(data_folder, "departments"))
@@ -379,6 +378,7 @@ def run_ppScraper(
     utils.create_folder(Path.joinpath(data_folder, "PMs", "raw_article_html"))
     utils.create_folder(state_data_folder)
 
+    # No dept_df inserted?
     if not isinstance(dept_df, pd.DataFrame):
         # scrape department data
         dept_df = get_dept_data()

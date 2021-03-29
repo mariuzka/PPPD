@@ -8,7 +8,6 @@ import requests
 import src
 
 
-
 def dates_between(date1, date2):
     """
     FUNCTION
@@ -43,8 +42,6 @@ def get_html(link):
 
 
 def get_dept_type(text):
-    # extract the type of dept from name of dept
-
     text = text.lower()
     if "poliz" in text or "kriminal" in text:
         dept_type = "police"
@@ -58,11 +55,21 @@ def get_dept_type(text):
 
 
 def create_folder(folder_path):
-    # create folders
     if not os.path.exists(folder_path):
         os.mkdir(folder_path)
 
-class logbook:
+
+def print_status(text):
+    print(str(datetime.datetime.now()),":", text)
+
+
+def get_str_dt():
+    str_dt = str(datetime.datetime.now()).replace(":", "-").replace(".", "-").replace(" ", "-")
+    str_dt = str_dt.rsplit("-", 1)[0]
+    return str_dt
+
+
+class Logbook:
     def __init__(self, output_folder_name, name):
         self.output_folder_name = output_folder_name
         self.name = name
@@ -76,12 +83,10 @@ class logbook:
         create_folder(Path.joinpath(self.output_folder_name, "logs"))
 
     def write_entry(self, entry):
+        print_status(entry)
         str_datetime = str(datetime.datetime.now())
         entry = str_datetime + ":" + entry
         txt_file = open(self.logbook_file_path, "a", encoding="utf-8")
         txt_file.write("\n")
         txt_file.write(entry)
         txt_file.close()
-
-def print_status(text):
-    print(str(datetime.datetime.now()),":", text)

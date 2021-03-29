@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup as bs
 import pandas as pd
 
 import src
-from src.ppCleaner import splitter
+from src import ppSplitterFunctions
 from src import utils
 
 
