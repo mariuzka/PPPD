@@ -1,6 +1,6 @@
 # PPPD
 
-The purpose of this project is mainly to scrape press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/), extract the relevant data and save it as datasets.
+The purpose of this project is mainly to scrape press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/), extract the relevant data and save it as datasets to use them in research projects.
 
 
 ## Installation
