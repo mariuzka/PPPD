@@ -21,11 +21,11 @@ ppr.get_blaulicht_data(
     states="baden-württemberg",                         
     years=2020,                                         
     dept_type="police",
-    output_folder_name="ppp_bw_crime_and_elections",
+    output_folder_name="ppp_bw",
 )
 ```
 
-The arguments *states* and *years* can both be either a single value or a list of values. In the following example multiple federal states and multiple years are given.
+The arguments *states* and *years* can both be either a single value or a list of values. In the following example multiple federal states and multiple years are given. Caution: the execution of the code below may take a few days.
 
 ```python
 from src import ppRunner as ppr
@@ -37,3 +37,4 @@ ppr.get_blaulicht_data(
     output_folder_name="example_project",
 )
 ```
+
