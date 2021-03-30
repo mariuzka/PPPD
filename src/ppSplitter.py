@@ -8,21 +8,25 @@ import pandas as pd
 import src
 
 
+# Minimum number of characters in a text snippet
 MIN_LEN = 200
-LOCATION_LIST = pickle.load(open(
-    Path.joinpath(src.PATH, "external_data", "Orte", "DE", "location_list.p"),
-    "rb",
-    ))
+
+# list containing names of locations
+LOCATION_LIST = pickle.load(open(Path.joinpath(src.PATH, "external_data", "Orte", "DE", "location_list.p"), "rb"))
 LOCATION_LIST.extend([loc.upper() for loc in LOCATION_LIST])
 
+
 def is_location(text):
+    """Checks if a given string is in the list of locations."""
+    
     if text in LOCATION_LIST:
         return True
     else:
         return False
 
+
 def split_report_part0(text):
-    """entfernt den Adressanhang unten im Report"""
+    """Entfernt den Adressanhang unten im Report."""
     
     phrases = [
         "Rückfragen bitte an:",
@@ -34,10 +38,12 @@ def split_report_part0(text):
         if len(splitted_report) > 1:
             text = splitted_report[0]
             break
+    
     return text
 
+
 def split_report_part1(text):
-    """Text anhand von ':' splitten."""
+    """Text anhand von Ortsbezeichnungen, welche vor einem ':' stehen, splitten."""
     
     snippets = []
     splitted_report = []
@@ -71,19 +77,22 @@ def split_report_part1(text):
             
             # Wenn eine der Bedingungen zutrifft
             if split:
-                
                 # alle bisher gesammalten Wörter zusammensetzen und als ein Report an Reportliste anhängen.
                 single_report = " ".join(snippets).strip()
                 splitted_report.append(single_report)
                 snippets = []
         
         snippets.append(word)
+    
     single_report = " ".join(snippets).strip()
     splitted_report.append(single_report)
     splitted_report = [text for text in splitted_report if len(text) >= MIN_LEN]
     return splitted_report
 
+
 def split_report_part3(text):
+    """Anhand von Orten, die nach Zeilenumbrüchen "relativ" am Anfang einer Zeile stehen, splitten."""
+
     snippets = []
     splitted_report = []
     ignore_list = []
@@ -92,27 +101,30 @@ def split_report_part3(text):
     for i, line in enumerate(text.split("\n")):
         split = False
         
-        # wenn in der Zeile weniger als 4 Worte vorkommen
         words = line.split()
-        if len(words) <= 3:
-            
+
+        # wenn in der Zeile nicht mehr als 3 Worte vorkommen und darin ein Ort genannt wird
+        if len(words) > 0 and len(words) <= 3:
             # Wenn die Zeile ein Ortsname ist
             if is_location(line.strip()):
                 split = True
-        
+            
+            if is_location(words[-1]): 
+                split = True
+
+        # wenn das erste Wort einer Zeile ein Ort ist
         if len(words) > 0:
             if is_location(words[0]): 
                 split = True
-            
             elif "-" in words[0]:
                 for w in words[0].split("-"):
                     if is_location(w):
                         split = True
+            elif len(words) > 1:
+                if is_location(words[0] + " " + words[1]):
+                    split = True
         
-        elif len(words) > 1:
-            if is_location(words[0] + " " + words[1]):
-                split = True
-                
+        # Wenn ein Split erkannt wurde
         if split:
             single_report = " ".join(snippets)
             
@@ -126,7 +138,10 @@ def split_report_part3(text):
     splitted_report = [text for text in splitted_report if len(text) >= MIN_LEN]
     return splitted_report
 
+
 def split_report_part4(text):
+    """Anhand von ' - ', das nach oder vor einem Ort kommt und eine neue Meldung einleitet, trennen."""
+    
     snippets = []
     splitted_report = []
     ignore_list = []
@@ -136,29 +151,25 @@ def split_report_part4(text):
         split = False
         
         if " - " in line and line.count(" - ") == 1:
-            # für jede Location überprüfen, ob sie in der Zeile
             
             l = line.split(" - ")
             
             if len(l) == 2:
                 if len(l[0]) > 0 and len(l[1]) > 0:
-            
-                    if len(l[0]) > 0:
-                        if is_location(l[0][-1]):
-                            split = True
                     
-                    if len(l[0]) > 1:
-                        if is_location(l[0][-2] + " " + l[0][-1]):
-                            split = True
+                    if is_location(l[0][-1]):
+                        split = True
                     
-                    if len(l[1]) > 0:
-                        if is_location(l[1][0]):
-                            split = True
+                    if is_location(l[0][-2] + " " + l[0][-1]):
+                        split = True
                     
-                    if len(l[1]) > 1:
-                        if is_location(l[1][0] + " " + l[1][1]):
-                            split = True
+                    if is_location(l[1][0]):
+                        split = True
+                    
+                    if is_location(l[1][0] + " " + l[1][1]):
+                        split = True
         
+        # Wenn Split gefunden
         if split:
             single_report = " ".join(snippets)
             
@@ -173,9 +184,8 @@ def split_report_part4(text):
     return splitted_report
 
 
-
 def split_report_part5(text):
-    """Anhand von großgeschriebenen Ortsnamen splitten."""
+    """Anhand von komplett großgeschriebenen Ortsnamen splitten."""
     
     snippets = []
     splitted_report = []
@@ -191,16 +201,16 @@ def split_report_part5(text):
             
             if i+2 <= len(words):
                 if words[i+1].isupper():
-                    if islocation(word + " " + words[i+1]) or islocation(word + " " + words[i+1].replace(":","").replace(".","")):
+                    if is_location(word + " " + words[i+1]) or is_location(word + " " + words[i+1].replace(":","").replace(".","")):
                         split=True
                 
-            # Wenn eine der Bedingungen zutrifft
-            if split:
-                
-                # alle bisher gesammalten Wörter zusammensetzen und als ein Report an Reportliste anhängen.
-                single_report = " ".join(snippets).strip()
-                splitted_report.append(single_report)
-                snippets = []
+        # Wenn eine der Bedingungen zutrifft
+        if split:
+            
+            # alle bisher gesammalten Wörter zusammensetzen und als ein Report an Reportliste anhängen.
+            single_report = " ".join(snippets).strip()
+            splitted_report.append(single_report)
+            snippets = []
         
         snippets.append(word)
     single_report = " ".join(snippets).strip()
@@ -221,6 +231,9 @@ def split_report(text):
     
     if len(splitted_report) == 1:
         splitted_report = split_report_part4(text)
+    
+    if len(splitted_report) == 1:
+        splitted_report = split_report_part5(text)
     
     # noch den evtl. abgeschnittenen teil aus dem vorherigen Bericht holen
     if len(splitted_report) > 1:
@@ -248,6 +261,7 @@ def split_reports_in_df(df, report_col, drop = True):
     # für jede Zeile des DF
     for i in df.index:
         
+        # Fortschritt anzeigen
         progress_temp = round((i / len_df) * 100)
         if progress_temp != progress:
             progress = progress_temp
@@ -255,7 +269,7 @@ def split_reports_in_df(df, report_col, drop = True):
         
         # Report-Text heraussuchen und splitten
         report = df.loc[i, report_col]
-        if len(report) > 100:
+        if len(report) > MIN_LEN:
             splitted_report = split_report(report)
         else:
             splitted_report = [report]
