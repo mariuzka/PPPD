@@ -1,6 +1,6 @@
 # PPPD
 
-The purpose of **PPPD** (Projekt-Polizei-Presse-Daten) is mainly to scrape press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/) and extract the relevant data to use it in research projects.
+The purpose of **PPPD** (**P**rojekt-**P**olizei-**P**resse-**D**aten) is mainly to scrape press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/) and extract the relevant data to use it in research projects.
 
 
 ## Installation
