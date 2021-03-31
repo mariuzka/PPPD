@@ -57,7 +57,7 @@ def extract_article_data(html, newsroom_nr):
     text = html.find("div", class_ = "card")
     text = text.find_all("p")
     text = [p.text for p in text]
-    text = "\n".join(text)
+    text = "\n\n###\n\n".join(text)
     
     # get tags used by presseportal
     tags = html.find_all("ul", class_ = "tags")
