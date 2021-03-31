@@ -10,7 +10,7 @@ The purpose of **PPPD** (**P**rojekt-**P**olizei-**P**resse-**D**aten) is mainly
 
 ## Usage
 
-The simplest way of scraping press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/) is to use the function `<addr>` **get_blaulicht_data()** from the module **ppRunner**. This function downloads and processes every press release from every newsroom in the given federal states and years of interest.
+The simplest way of scraping press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/) is to use the function `get_blaulicht_data()` from the module `ppRunner`. This function downloads and processes every press release from every newsroom in the given federal states and years of interest.
 
 In the following example, the function is used to download all press releases from 2020 (years=2020) posted by police departments (dept_type="police") in Baden-Württemberg (states="baden-württemberg"). A folder named "ppp_bw" (output_folder_name="ppp_bw") will be created within the project folder and all data will be stored in it.
 
