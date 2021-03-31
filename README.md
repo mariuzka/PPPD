@@ -1,6 +1,6 @@
-# PPPD (**P**rojekt **P**olizei-**P**resse-**D**aten)
+# PPPD
 
-The purpose of this project is mainly to scrape press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/) and extract the relevant data to use it in research projects.
+The purpose of **PPPD** (Projekt-Polizei-Presse-Daten) is mainly to scrape press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/) and extract the relevant data to use it in research projects.
 
 
 ## Installation
@@ -25,7 +25,7 @@ ppr.get_blaulicht_data(
 )
 ```
 
-The arguments *states* and *years* can both be either a single value or a list of values. In the following example multiple federal states and multiple years are specified. Caution: The execution of the code below may take a few days.
+The arguments *states* and *years* can both be either a single value or a list of values. In the following example, multiple federal states and multiple years are specified. Caution: The execution of the code below may take a few days.
 
 ```python
 from src import ppRunner as ppr
