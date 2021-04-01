@@ -11,7 +11,7 @@ import src
 SEP = "#+#+#+#+#+#"
 
 # Minimum number of characters in a text snippet
-MIN_LEN = 300
+MIN_LEN = 250
 
 # list containing names of locations
 LOCATION_LIST = pickle.load(open(Path.joinpath(src.PATH, "external_data", "Orte", "DE", "location_list.p"), "rb"))
@@ -25,6 +25,15 @@ PHRASES = [
     "Rückfragen bitte an:",
     "Medienrückfragen bitte an:",
 ]
+
+
+def ends_with_punctuation(text):
+    status = False
+    for punct in [".", ",", "!", "?", ":"]:
+        if text.strip().endswith(punct):
+            status = True
+            break
+    return status
 
 
 def is_location(text):
@@ -77,8 +86,7 @@ def split_report_part6(text):
         line = line.strip()
         words = line.split()
 
-        # wenn in der Zeile nicht mehr als 3 Worte vorkommen und darin ein Ort genannt wird
-        if len(words) > 0 and not line.endswith("."):
+        if len(words) > 0 and not ends_with_punctuation(line):
             for i, word in enumerate(words):
                 if ":" in word and not words[i-1].isdigit():
                     split = True
@@ -166,15 +174,18 @@ def split_report_part3(text):
             # Wenn die Zeile ein Ortsname ist
             if is_location(line.strip()):
                 split = True
+                
             
             if is_location(words[-1]): 
                 split = True
+                
         
         # wenn Zeile nicht mit Punkt endet und ein Ort darin ist
-        if len(words) > 0 and not line.endswith("."):
+        if len(words) > 0 and not ends_with_punctuation(line.strip()):
             for word in words:
                 if is_location(word):
                     split = True
+                    
 
 
         # wenn das erste Wort einer Zeile ein Ort ist
@@ -284,8 +295,8 @@ def split_report(text):
     splitted_report = split_report_part0(text)
     
     # Zeilenweise durchgehen und Split-Marker einfügen
-    splitted_report = split_report_part6(splitted_report)
     splitted_report = split_report_part3(splitted_report)
+    splitted_report = split_report_part6(splitted_report)
     splitted_report = split_report_part4(splitted_report)
     
     # Wortweise durchgehen und Split-Marker einfügen
@@ -294,7 +305,7 @@ def split_report(text):
     
     # Am Split-Marker splitten
     splitted_report = splitted_report.split(SEP)
-    
+
     # noch den evtl. abgeschnittenen Teil (bis zum letzten Punkt) aus dem vorherigen Bericht holen
     if len(splitted_report) > 1:
         for i, report in enumerate(splitted_report):
