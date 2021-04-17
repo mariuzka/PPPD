@@ -369,3 +369,50 @@ def split_reports_in_df(df, report_col, drop = True):
         new_df = new_df.drop(report_col, 1)
     
     return new_df
+
+
+def eval_splits(df, df_split, n=100):
+    """Erstellt ein Text-Dokument, mit welchem die Splits überprüft werden können."""
+
+    txt_file = open(Path.joinpath(src.PATH, "temp", "eval_split.txt"), "w", encoding="utf-8")
+    df = copy.deepcopy(df)
+    df = df.sample(n=n)
+    for i, row in enumerate(df.index):
+
+        link = df.loc[row, "article_link"]
+        original_text = df.loc[row, "text"]
+        txt_file = open(Path.joinpath(src.PATH, "temp", "eval_split.txt"), "a", encoding="utf-8")
+        
+        txt_file.write("\n")
+        txt_file.write("\n")
+        txt_file.write("###################################################################################################\n")
+        txt_file.write("---------------------------------------------------------------------------------------------------\n")
+        txt_file.write("###################################################################################################\n")
+        txt_file.write("\n")
+        txt_file.write("\n")
+        txt_file.write(link)
+        txt_file.write("\n")
+        txt_file.write("\n")
+        txt_file.write(str(i))
+        txt_file.write("\n")
+        txt_file.write("\n")
+        txt_file.write("ORIGINAL")
+        txt_file.write("\n")
+        txt_file.write("\n")
+        txt_file.write(original_text)
+        txt_file.write("\n")
+        txt_file.write("\n")
+        txt_file.write("---------------------------------------------------------------------------------------------------\n")
+        txt_file.write("\n")
+        txt_file.write("\n")
+        txt_file.write("SPLIT")
+        txt_file.write("\n")
+        txt_file.close()
+
+        for text_snippet in df_split[df_split["article_link"] == link]["text_snippet"]:
+            txt_file = open(Path.joinpath(src.PATH, "temp", "eval_split.txt"), "a", encoding="utf-8")
+            txt_file.write("\n")
+            txt_file.write(text_snippet)
+            txt_file.write("\n")
+            txt_file.write("---------------------------------------------------------------------------------------------------\n")
+            txt_file.close()
