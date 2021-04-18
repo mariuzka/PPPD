@@ -368,14 +368,14 @@ def scrape_blaulicht(
 
     # create some important paths
     data_folder = Path.joinpath(src.PATH, "output_data", output_folder_name)
-    state_data_folder = Path.joinpath(data_folder, "PMs", "raw_article_html", state)
+    state_data_folder = Path.joinpath(data_folder, "articles", "raw_article_html", state)
     
     # create folder structure
     utils.create_folder(Path.joinpath(src.PATH, "output_data"))
     utils.create_folder(data_folder)
     utils.create_folder(Path.joinpath(data_folder, "departments"))
-    utils.create_folder(Path.joinpath(data_folder, "PMs"))
-    utils.create_folder(Path.joinpath(data_folder, "PMs", "raw_article_html"))
+    utils.create_folder(Path.joinpath(data_folder, "articles"))
+    utils.create_folder(Path.joinpath(data_folder, "articles", "raw_article_html"))
     utils.create_folder(state_data_folder)
 
     # No dept_df inserted?

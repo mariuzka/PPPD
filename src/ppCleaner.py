@@ -101,11 +101,11 @@ def html_to_df(state, year, output_folder_name):
 
     output_folder_path = Path.joinpath(src.PATH, "output_data", output_folder_name)
 
-    utils.create_folder(Path.joinpath(output_folder_path, "PMs", "state_datasets"))
+    utils.create_folder(Path.joinpath(output_folder_path, "articles", "state_datasets"))
 
     state_year_data_folder_path = Path.joinpath(
         output_folder_path,
-        "PMs",
+        "articles",
         "raw_article_html",
         state,
         year,
@@ -173,7 +173,7 @@ def html_to_df(state, year, output_folder_name):
     
     state_datasets_folder_path = Path.joinpath(
         output_folder_path,
-        "PMs", 
+        "articles", 
         "state_datasets", 
         state,
         )
@@ -196,7 +196,7 @@ def split_reports_bw(state, year, output_folder_name):
         src.PATH, 
         "output_data",
         output_folder_name,
-        "PMs", 
+        "articles", 
         "state_datasets", 
         state,
     )
