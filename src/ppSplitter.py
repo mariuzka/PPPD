@@ -6,6 +6,7 @@ import pickle
 import pandas as pd
 
 import src
+from src import utils
 
 
 SEP = "#+#+#+#+#+#"
@@ -371,17 +372,19 @@ def split_reports_in_df(df, report_col, drop = True):
     return new_df
 
 
-def eval_splits(df, df_split, n=100):
+def eval_splits(df, df_split, doc_name, n=100):
     """Erstellt ein Text-Dokument, mit welchem die Splits überprüft werden können."""
 
-    txt_file = open(Path.joinpath(src.PATH, "temp", "eval_split.txt"), "w", encoding="utf-8")
+    utils.create_folder(Path.joinpath(src.PATH, "misc"))
+
+    txt_file = open(Path.joinpath(src.PATH, "misc", doc_name+".txt"), "w", encoding="utf-8")
     df = copy.deepcopy(df)
     df = df.sample(n=n)
     for i, row in enumerate(df.index):
 
         link = df.loc[row, "article_link"]
         original_text = df.loc[row, "text"]
-        txt_file = open(Path.joinpath(src.PATH, "temp", "eval_split.txt"), "a", encoding="utf-8")
+        txt_file = open(Path.joinpath(src.PATH, "misc", doc_name+".txt"), "a", encoding="utf-8")
         
         txt_file.write("\n")
         txt_file.write("\n")
@@ -410,7 +413,7 @@ def eval_splits(df, df_split, n=100):
         txt_file.close()
 
         for text_snippet in df_split[df_split["article_link"] == link]["text_snippet"]:
-            txt_file = open(Path.joinpath(src.PATH, "temp", "eval_split.txt"), "a", encoding="utf-8")
+            txt_file = open(Path.joinpath(src.PATH, "misc", doc_name+".txt"), "a", encoding="utf-8")
             txt_file.write("\n")
             txt_file.write(text_snippet)
             txt_file.write("\n")
