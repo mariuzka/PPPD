@@ -1,6 +1,9 @@
 import datetime as dt
 from pathlib import Path
 
+from sqlalchemy import Index
+from sqlalchemy.exc import ProgrammingError
+
 import src
 from src.models import *
 
@@ -37,6 +40,21 @@ def parse_newsroom(state, year, newsroom):
     session.close()
 
 
+def add_final_indexes():
+    global engine
+
+    indexes = [
+        Index("article_newsroom_ix", Article.newsroom_id),
+        Index("article_date_ix", Article.date),
+    ]
+
+    for index in indexes:
+        try:
+            index.create(bind=engine)
+        except ProgrammingError:
+            pass
+
+
 def main():
 
     # create tables from src.models.Base
@@ -47,6 +65,7 @@ def main():
             for newsroom in year.iterdir():
                 parse_newsroom(state, year, newsroom)
 
+    add_final_indexes()
 
 if __name__ == "__main__":
     engine, Session = src.db_connection(init=False)
