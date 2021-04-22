@@ -6,6 +6,7 @@ from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import ForeignKey
 from sqlalchemy import Text
+from sqlalchemy import UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -25,6 +26,7 @@ class Str:
 
 class Article(Base, Str):
     __tablename__ = "articles"
+    __table_args__ = (UniqueConstraint("newsroom_id", "date", "daily_index"),)
 
     id = Column(Integer, primary_key=True)
     newsroom_id = Column(Integer, ForeignKey("newsrooms.id"))
@@ -34,7 +36,6 @@ class Article(Base, Str):
 
     newsroom = relationship("Newsroom", back_populates="articles", uselist=False)
     raw_html = relationship("ArticleHTML", backref="article", uselist=False)
-
 
 class Newsroom(Base, Str):
     __tablename__ = "newsrooms"
