@@ -37,11 +37,12 @@ class Article(Base, Str):
     newsroom = relationship("Newsroom", back_populates="articles", uselist=False)
     raw_html = relationship("ArticleHTML", backref="article", uselist=False)
 
+
 class Newsroom(Base, Str):
     __tablename__ = "newsrooms"
 
     id = Column(Integer, primary_key=True)
-  
+
     title = Column(Text)
     subtitle = Column(Text)
 
@@ -56,6 +57,7 @@ class Newsroom(Base, Str):
     articles = relationship("Article", back_populates="newsroom")
 
     scraping_datetime = Column(DateTime, default=dt.datetime.now)
+
 
 class ArticleHTML(Base, Str):
     __tablename__ = "articles_html_raw"
