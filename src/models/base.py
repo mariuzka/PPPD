@@ -1,3 +1,5 @@
+import datetime as dt
+
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Integer
@@ -33,7 +35,19 @@ class Newsroom(Base, Str):
     __tablename__ = "newsrooms"
 
     id = Column(Integer, primary_key=True)
+  
+    title = Column(Text)
+    subtitle = Column(Text)
 
+    dept_name = Column(Text)
+    dept_district = Column(Text)
+    dept_state = Column(Text)
+    dept_type = Column(Text)
+
+    link = Column(Text)
+    weblinks = Column(Text)
+
+    scraping_datetime = Column(DateTime, default=dt.datetime.now)
 
 class ArticleHTML(Base, Str):
     __tablename__ = "articles_html_raw"
