@@ -4,3 +4,9 @@ pwd =
 host = localhost
 port = 5432
 database = pppd
+
+[Spark]
+n_cores = 4
+driver_mem = 24g
+exec_mem = 8g
+max_resultsize = 8g

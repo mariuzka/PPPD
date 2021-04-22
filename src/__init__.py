@@ -28,3 +28,20 @@ def db_connection(init=True):
     if init:
         return engine, Session()
     return engine, Session
+
+
+def spark_session():
+    from pyspark.sql import SparkSession
+
+    spark = (
+        SparkSession.builder.master(f"local[{config.get('Spark', 'n_cores')}]")
+        .appName("pppd")
+        .config("spark.submit.deployMode", "client")
+        .config("spark.shuffle.spill.compress", "false")
+        .config("spark.driver.memory", config.get('Spark', 'driver_mem'))
+        .config("spark.executor.memory",  config.get('Spark', 'exec_mem'))
+        .config("spark.driver.maxResultSize",  config.get('Spark', 'max_resultsize'))
+        .getOrCreate()
+    )
+
+    return spark
