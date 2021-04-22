@@ -1,6 +1,7 @@
 import datetime as dt
 
 from sqlalchemy import Column
+from sqlalchemy import Date
 from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import ForeignKey
@@ -26,9 +27,13 @@ class Article(Base, Str):
     __tablename__ = "articles"
 
     id = Column(Integer, primary_key=True)
-    newsroom = Column(Integer, ForeignKey("newsrooms.id"))
+    newsroom_id = Column(Integer, ForeignKey("newsrooms.id"))
+    date = Column(Date)
+    daily_index = Column(Integer)
+    scraped_at = Column(DateTime)
 
-    raw_html = relationship("ArticleHTML", backref="article")
+    newsroom = relationship("Newsroom", back_populates="articles", uselist=False)
+    raw_html = relationship("ArticleHTML", backref="article", uselist=False)
 
 
 class Newsroom(Base, Str):
@@ -46,6 +51,8 @@ class Newsroom(Base, Str):
 
     link = Column(Text)
     weblinks = Column(Text)
+
+    articles = relationship("Article", back_populates="newsroom")
 
     scraping_datetime = Column(DateTime, default=dt.datetime.now)
 
