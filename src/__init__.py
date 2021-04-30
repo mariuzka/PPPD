@@ -5,7 +5,7 @@ PATH = Path(__file__).parent.parent
 
 
 config = ConfigParser()
-config.read(PATH / "config.ini")
+config.read(Path.joinpath(PATH, "config.ini"))
 
 
 user = config.get("DB", "user")

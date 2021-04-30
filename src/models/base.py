@@ -33,6 +33,17 @@ class Article(Base, Str):
     date = Column(Date)
     daily_index = Column(Integer)
     scraped_at = Column(DateTime)
+    
+    article_link = Column(Text)
+    newsroom_nr = Column(Text)
+    from_presseportal = Column(Text)
+    location = Column(Text)
+    header = Column(Text)
+    text = Column(Text)
+    location_tags_names = Column(Text)
+    location_tags_scores = Column(Text)
+    topic_tags_names = Column(Text)
+    topic_tags_scores = Column(Text)
 
     newsroom = relationship("Newsroom", back_populates="articles", uselist=False)
     raw_html = relationship("ArticleHTML", backref="article", uselist=False)

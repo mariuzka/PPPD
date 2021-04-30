@@ -92,6 +92,8 @@ def extract_article_data(html, newsroom_nr):
     return data
 
 
+    
+
 def html_to_df(state, year, output_folder_name):
     utils.print_status("start converting raw html files to datasets.")
     
@@ -186,6 +188,8 @@ def html_to_df(state, year, output_folder_name):
         )
     
     utils.print_status("finished converting raw html files to datasets.")
+
+
 
 
 def split_reports_bw(state, year, output_folder_name):
