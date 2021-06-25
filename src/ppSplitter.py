@@ -9,10 +9,11 @@ import src
 from src import utils
 
 
-SEP = "#+#+#+#+#+#"
+SEP = " #+#+#+#+#+# "
+SEP_strip = SEP.strip()
 
 # Minimum number of characters in a text snippet
-MIN_LEN = 250
+MIN_LEN = 120
 
 # list containing names of locations
 LOCATION_LIST = pickle.load(open(Path.joinpath(src.PATH, "external_data", "Orte", "DE", "location_list.p"), "rb"))
@@ -28,13 +29,24 @@ PHRASES = [
 ]
 
 
+
 def ends_with_punctuation(text):
     status = False
+    
+    words = text.split()
+    
+    # eingeklammerte Worte am Ende entfernen
+    if words[-1].endswith(")") and words[-1].startswith("("):
+        words = words[0:-1]
+        text = " ".join(words)
+    
+    # prüfen ob der text mit 
     for punct in [".", ",", "!", "?", ":"]:
         if text.strip().endswith(punct):
             status = True
             break
     return status
+
 
 
 def is_location(text):
@@ -58,9 +70,16 @@ def is_location(text):
         if not location:
             if word in LOCATION_LIST:
                 location = True
+        
+    if not location:
+        for l in LOCATION_LIST:
+            if l in text:
+                location = True
+                    
     
     return location
         
+
 
 def split_report_part0(text):
     """Entfernt den Adressanhang unten im Report."""
@@ -74,52 +93,23 @@ def split_report_part0(text):
     return text
 
 
-def split_report_part6(text):
-
-    snippets = []
-    splitted_report = []
-    ignore_list = []
-    
-    # für jede Zeile
-    for i, line in enumerate(text.split("\n")):
-        split = False
-        
-        line = line.strip()
-        words = line.split()
-
-        if len(words) > 0 and not ends_with_punctuation(line):
-            for i, word in enumerate(words):
-                if ":" in word and not words[i-1].isdigit():
-                    split = True
-        # Wenn ein Split erkannt wurde
-        if split:
-            single_report = "\n".join(snippets)
-            
-            splitted_report.append(single_report)
-            snippets = []
-        
-        snippets.append(line)
-    
-    single_report = "\n".join(snippets)
-    splitted_report.append(single_report)
-    splitted_report = SEP.join(splitted_report)
-    
-    return splitted_report
-
 
 def split_report_part1(text):
     """Text anhand von Ortsbezeichnungen, welche vor einem ':' stehen, splitten."""
+    ignore_list = ["Tel.:"]
     
     snippets = []
     splitted_report = []
     words = text.split()
+    
+    split_counter = 0
     
     # für jedes "Wort" im Report
     for i, word in enumerate(words):
         split = False
         
         # wenn ein ":" im Wort ist
-        if ":" in word:
+        if ":" in word and not word[0].isnumeric() and word not in ignore_list:
             
             # wenn das Wort bzw. die zwei Wörter vor dem ":" ein Ortsname ist
             if is_location(word[:-1]) or is_location(words[i-1] + " " + word[:-1]) or is_location(words[i-1] + " " + words[i-2] + " " + word[:-1]):
@@ -143,6 +133,7 @@ def split_report_part1(text):
             
             # Wenn eine der Bedingungen zutrifft
             if split:
+                split_counter += 1
                 # alle bisher gesammalten Wörter zusammensetzen und als ein Report an Reportliste anhängen.
                 single_report = " ".join(snippets).strip()
                 splitted_report.append(single_report)
@@ -153,7 +144,7 @@ def split_report_part1(text):
     single_report = " ".join(snippets).strip()
     splitted_report.append(single_report)
     splitted_report = SEP.join(splitted_report)
-    return splitted_report
+    return splitted_report, split_counter
 
 
 def split_report_part3(text):
@@ -162,6 +153,8 @@ def split_report_part3(text):
     snippets = []
     splitted_report = []
     ignore_list = []
+    
+    split_counter = 0
     
     # für jede Zeile
     for i, line in enumerate(text.split("\n")):
@@ -182,7 +175,7 @@ def split_report_part3(text):
                 
         
         # wenn Zeile nicht mit Punkt endet und ein Ort darin ist
-        if len(words) > 0 and not ends_with_punctuation(line.strip()):
+        if len(words) > 0 and not ends_with_punctuation(line):
             for word in words:
                 if is_location(word):
                     split = True
@@ -190,19 +183,22 @@ def split_report_part3(text):
 
 
         # wenn das erste Wort einer Zeile ein Ort ist
-        if len(words) > 0:
-            if is_location(words[0]): 
-                split = True
-            elif "-" in words[0]:
-                for w in words[0].split("-"):
-                    if is_location(w):
-                        split = True
-            elif len(words) > 1:
-                if is_location(words[0] + " " + words[1]):
-                    split = True
+        # if len(words) > 0:
+        #     if is_location(words[0]): 
+        #         split = True
+        #     elif "-" in words[0]:
+        #         for w in words[0].split("-"):
+        #             if is_location(w):
+        #                 split = True
+        #     elif len(words) > 1:
+        #         if is_location(words[0] + " " + words[1]):
+        #             split = True
+        
+        
         
         # Wenn ein Split erkannt wurde
         if split:
+            split_counter += 1
             single_report = "\n".join(snippets)
             
             splitted_report.append(single_report)
@@ -213,45 +209,9 @@ def split_report_part3(text):
     single_report = "\n".join(snippets)
     splitted_report.append(single_report)
     splitted_report = SEP.join(splitted_report)
-    return splitted_report
+    
+    return splitted_report, split_counter
 
-
-def split_report_part4(text):
-    """Anhand von ' - ', das nach oder vor einem Ort kommt und eine neue Meldung einleitet, trennen."""
-    
-    snippets = []
-    splitted_report = []
-    ignore_list = []
-    
-    # für jede Zeile
-    for i, line in enumerate(text.split("\n")):
-        split = False
-        
-        if " - " in line and line.count(" - ") == 1:
-            
-            l = line.split(" - ")
-            
-            if len(l[0]) > 0 and len(l[1]) > 0:
-                
-                if is_location(l[0]):
-                    split = True
-                
-                if is_location(l[1]):
-                    split = True
-                
-        # Wenn Split gefunden
-        if split:
-            single_report = "\n".join(snippets)
-            
-            splitted_report.append(single_report)
-            snippets = []
-        
-        snippets.append(line)
-    
-    single_report = "\n".join(snippets)
-    splitted_report.append(single_report)
-    splitted_report = SEP.join(splitted_report)
-    return splitted_report
 
 
 def split_report_part5(text):
@@ -260,6 +220,8 @@ def split_report_part5(text):
     snippets = []
     splitted_report = []
     words = text.split()
+    
+    split_counter = 0
     
     # für jedes "Wort" im Report
     for i, word in enumerate(words):
@@ -276,6 +238,7 @@ def split_report_part5(text):
                 
         # Wenn eine der Bedingungen zutrifft
         if split:
+            split_counter += 1
             
             # alle bisher gesammalten Wörter zusammensetzen und als ein Report an Reportliste anhängen.
             single_report = " ".join(snippets).strip()
@@ -286,7 +249,8 @@ def split_report_part5(text):
     single_report = " ".join(snippets).strip()
     splitted_report.append(single_report)
     splitted_report = SEP.join(splitted_report)
-    return splitted_report
+    return splitted_report, split_counter
+
 
 
 def split_report(text):
@@ -296,31 +260,39 @@ def split_report(text):
     splitted_report = split_report_part0(text)
     
     # Zeilenweise durchgehen und Split-Marker einfügen
-    splitted_report = split_report_part3(splitted_report)
-    splitted_report = split_report_part6(splitted_report)
-    splitted_report = split_report_part4(splitted_report)
+    splitted_report, split_counter = split_report_part3(splitted_report)
+    #splitted_report = split_report_part6(splitted_report)
+    #splitted_report = split_report_part4(splitted_report)
     
+    #if split_counter == 0:
     # Wortweise durchgehen und Split-Marker einfügen
-    splitted_report = split_report_part1(splitted_report)
-    splitted_report = split_report_part5(splitted_report)
+    splitted_report, split_counter = split_report_part1(splitted_report)
+    splitted_report, split_counter = split_report_part5(splitted_report)
     
     # Am Split-Marker splitten
     splitted_report = splitted_report.split(SEP)
-
+    
+   
+    
     # noch den evtl. abgeschnittenen Teil (bis zum letzten Punkt) aus dem vorherigen Bericht holen
     if len(splitted_report) > 1:
         for i, report in enumerate(splitted_report):
             if i > 0:
                 the_forgotten_part = splitted_report[i-1].split(".")[-1]
-                splitted_report[i] = " ".join([the_forgotten_part, splitted_report[i]])
-                splitted_report[i-1] = splitted_report[i-1][:len(splitted_report[i-1]) - len(the_forgotten_part)]
+                
+                if len(the_forgotten_part) < MIN_LEN:
+                    splitted_report[i] = " ".join([the_forgotten_part, splitted_report[i]])
+                    splitted_report[i-1] = splitted_report[i-1][:len(splitted_report[i-1]) - len(the_forgotten_part)]
     
     # Nur Berichte mit Mindestlänge behalten
     splitted_report = [text.strip() for text in splitted_report if len(text.strip()) >= MIN_LEN]
     
+    splitted_report = [text.replace(SEP_strip, "").strip() for text in splitted_report]
+    
     return splitted_report
         
    
+    
 def split_reports_in_df(df, report_col, drop = True):
     """Splittet alle Texte innerhalb einer Dataframe-Spalte."""
     
@@ -369,21 +341,43 @@ def split_reports_in_df(df, report_col, drop = True):
     if drop:
         new_df = new_df.drop(report_col, 1)
     
-    return new_df
+    return new_df 
 
 
-def eval_splits(df, df_split, doc_name, n=100):
+
+def eval_splits(df, df_split, doc_name, n=False, frac=False):
     """Erstellt ein Text-Dokument, mit welchem die Splits überprüft werden können."""
+
+    assert (n and not frac) or (frac and not n)
 
     utils.create_folder(Path.joinpath(src.PATH, "misc"))
 
     txt_file = open(Path.joinpath(src.PATH, "misc", doc_name+".txt"), "w", encoding="utf-8")
     df = copy.deepcopy(df)
-    df = df.sample(n=n)
+
+    len_df = len(df)
+
+    if n:
+        assert n > 0
+        assert n <= len(df)
+        df = df.sample(n=n)
+    
+    elif frac:
+        assert 0 < frac <= 1
+        df = df.sample(frac=frac)
+    
+    print("Vom DF mit", len_df, "Zeilen wurde ein Sample der Größe", len(df), "gezogen.")
+
+    text_data_dicts = []
+
     for i, row in enumerate(df.index):
 
         link = df.loc[row, "article_link"]
         original_text = df.loc[row, "text"]
+        newsroom_nr = df.loc[row, "newsroom_nr"]
+        newsroom = df.loc[row, "newsroom"]
+        date_release = df.loc[row, "date_release"]
+
         txt_file = open(Path.joinpath(src.PATH, "misc", doc_name+".txt"), "a", encoding="utf-8")
         
         txt_file.write("\n")
@@ -412,10 +406,28 @@ def eval_splits(df, df_split, doc_name, n=100):
         txt_file.write("\n")
         txt_file.close()
 
+        text_snippets = []
         for text_snippet in df_split[df_split["article_link"] == link]["text_snippet"]:
+
+            text_snippets.append(text_snippet)
+            
             txt_file = open(Path.joinpath(src.PATH, "misc", doc_name+".txt"), "a", encoding="utf-8")
             txt_file.write("\n")
             txt_file.write(text_snippet)
             txt_file.write("\n")
             txt_file.write("---------------------------------------------------------------------------------------------------\n")
             txt_file.close()
+        
+        split_text = "\n\n --------------------------------------------------------------------------------------------------- \n\n".join(text_snippets)
+    
+        text_data_dicts.append({
+            "link": link,
+            "newsroom_nr": newsroom_nr,
+            "newsroom": newsroom,
+            "date_release": date_release,
+            "original_text": original_text,
+            "split_text": split_text,
+        })
+
+    eval_df = pd.DataFrame(text_data_dicts)
+    eval_df.to_excel(Path.joinpath(src.PATH, "misc", doc_name+".xlsx"), index=False)
