@@ -14,6 +14,7 @@ SEP_strip = SEP.strip()
 
 # Minimum number of characters in a text snippet
 MIN_LEN = 120
+TOTAL_MIN_LEN = 150
 
 # list containing names of locations
 LOCATION_LIST = pickle.load(open(Path.joinpath(src.PATH, "external_data", "Orte", "DE", "location_list.p"), "rb"))
@@ -261,19 +262,14 @@ def split_report(text):
     
     # Zeilenweise durchgehen und Split-Marker einfügen
     splitted_report, split_counter = split_report_part3(splitted_report)
-    #splitted_report = split_report_part6(splitted_report)
-    #splitted_report = split_report_part4(splitted_report)
     
-    #if split_counter == 0:
     # Wortweise durchgehen und Split-Marker einfügen
     splitted_report, split_counter = split_report_part1(splitted_report)
     splitted_report, split_counter = split_report_part5(splitted_report)
     
     # Am Split-Marker splitten
     splitted_report = splitted_report.split(SEP)
-    
    
-    
     # noch den evtl. abgeschnittenen Teil (bis zum letzten Punkt) aus dem vorherigen Bericht holen
     if len(splitted_report) > 1:
         for i, report in enumerate(splitted_report):
@@ -284,9 +280,12 @@ def split_report(text):
                     splitted_report[i] = " ".join([the_forgotten_part, splitted_report[i]])
                     splitted_report[i-1] = splitted_report[i-1][:len(splitted_report[i-1]) - len(the_forgotten_part)]
     
-    # Nur Berichte mit Mindestlänge behalten
-    splitted_report = [text.strip() for text in splitted_report if len(text.strip()) >= MIN_LEN]
     
+    # Nur Berichte mit Mindestlänge behalten
+    splitted_report = [text.strip() for text in splitted_report if len(text.strip()) >= TOTAL_MIN_LEN]
+    splitted_report = [text.strip() for text in splitted_report if not (len(text.strip()) <= 200 and "Pressestelle Polizeipräsidium Karlsruhe" in text)]
+    
+    # Überreste von Split-Marker entfernen
     splitted_report = [text.replace(SEP_strip, "").strip() for text in splitted_report]
     
     return splitted_report
@@ -347,12 +346,14 @@ def split_reports_in_df(df, report_col, drop = True):
 
 def eval_splits(df, df_split, doc_name, n=False, frac=False):
     """Erstellt ein Text-Dokument, mit welchem die Splits überprüft werden können."""
-
+    
+    FOLDER_NAME = "eval_split_files"
+    
     assert (n and not frac) or (frac and not n)
 
-    utils.create_folder(Path.joinpath(src.PATH, "misc"))
+    utils.create_folder(Path.joinpath(src.PATH, FOLDER_NAME))
 
-    txt_file = open(Path.joinpath(src.PATH, "misc", doc_name+".txt"), "w", encoding="utf-8")
+    txt_file = open(Path.joinpath(src.PATH, FOLDER_NAME, doc_name+".txt"), "w", encoding="utf-8")
     df = copy.deepcopy(df)
 
     len_df = len(df)
@@ -378,7 +379,7 @@ def eval_splits(df, df_split, doc_name, n=False, frac=False):
         newsroom = df.loc[row, "newsroom"]
         date_release = df.loc[row, "date_release"]
 
-        txt_file = open(Path.joinpath(src.PATH, "misc", doc_name+".txt"), "a", encoding="utf-8")
+        txt_file = open(Path.joinpath(src.PATH, FOLDER_NAME, doc_name+".txt"), "a", encoding="utf-8")
         
         txt_file.write("\n")
         txt_file.write("\n")
@@ -411,7 +412,7 @@ def eval_splits(df, df_split, doc_name, n=False, frac=False):
 
             text_snippets.append(text_snippet)
             
-            txt_file = open(Path.joinpath(src.PATH, "misc", doc_name+".txt"), "a", encoding="utf-8")
+            txt_file = open(Path.joinpath(src.PATH, FOLDER_NAME, doc_name+".txt"), "a", encoding="utf-8")
             txt_file.write("\n")
             txt_file.write(text_snippet)
             txt_file.write("\n")
@@ -430,4 +431,4 @@ def eval_splits(df, df_split, doc_name, n=False, frac=False):
         })
 
     eval_df = pd.DataFrame(text_data_dicts)
-    eval_df.to_excel(Path.joinpath(src.PATH, "misc", doc_name+".xlsx"), index=False)
+    eval_df.to_excel(Path.joinpath(src.PATH, FOLDER_NAME, doc_name+".xlsx"), index=False)

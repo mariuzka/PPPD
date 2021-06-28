@@ -191,8 +191,7 @@ def html_to_df(state, year, output_folder_name):
 
 
 
-
-def split_reports_bw(state, year, output_folder_name):
+def split_reports_bw(state, year, output_folder_name, n=False):
     year = str(year)
     
     # load data
@@ -204,7 +203,14 @@ def split_reports_bw(state, year, output_folder_name):
         "state_datasets", 
         state,
     )
-
     df = pd.read_csv(Path.joinpath(folder_path, state + "_" + year + ".csv"))
+    
+    # draw a sample?
+    if n:
+        df = df.sample(n=n)
+    
+    # split texts
     df_split = ppSplitter.split_reports_in_df(df, "text")
+    
+    # save
     df_split.to_csv(Path.joinpath(folder_path, state + "_" + year + "_split.csv"), index = False)

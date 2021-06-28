@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from src import ppCleaner as ppc
 
 STATE = "baden-württemberg"
@@ -7,10 +9,10 @@ years = [
     #2015,
     #2016,
     #2017,
-    2018,
+    #2018,
     2019,
     2020,
-    #2021,
+    2021,
     ]
 
 for year in years:

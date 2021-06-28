@@ -133,3 +133,8 @@ dmypy.json
 
 # exclude config ini w/ passwords
 config.ini
+
+# folders
+/misc
+/output_data
+/temp

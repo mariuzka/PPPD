@@ -20,4 +20,4 @@ years = [
 for year in years:
     df = pd.read_csv(Path.joinpath(datasets_path, "baden-württemberg_" + year + ".csv"))
     df_split = pd.read_csv(Path.joinpath(datasets_path, "baden-württemberg_" + year + "_split.csv"))
-    ppSplitter.eval_splits(df=df, df_split=df_split, doc_name="eval_split_bw_"+year, n=False, frac=0.01)
+    ppSplitter.eval_splits(df=df, df_split=df_split, doc_name="eval_split_bw_"+year, n=False, frac=0.001)
