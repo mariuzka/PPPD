@@ -7,14 +7,18 @@ PATH = Path(__file__).parent.parent
 config = ConfigParser()
 config.read(Path.joinpath(PATH, "config.ini"))
 
+try:
+    user = config.get("DB", "user")
+    pwd = config.get("DB", "pwd")
+    host = config.get("DB", "host")
+    port = config.get("DB", "port")
+    database = config.get("DB", "database")
 
-user = config.get("DB", "user")
-pwd = config.get("DB", "pwd")
-host = config.get("DB", "host")
-port = config.get("DB", "port")
-database = config.get("DB", "database")
+    CONN = f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{database}"
 
-CONN = f"postgresql+psycopg2://{user}:{pwd}@{host}:{port}/{database}"
+except Exception as error:
+    print("WARNING: No connection to Database.")
+    print(error)
 
 
 def db_connection(init=True):
