@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import datetime
 import os
 from pathlib import Path
@@ -61,49 +63,55 @@ def get_dept_data():
         
         # for every department in the state
         for d in departments:
+
+            try:
             
-            # get name of dept
-            name_of_dept = d.find("a")["title"]
-            name_of_dept = name_of_dept.replace("weiter zum newsroom von","")
-            
-            dept_type = utils.get_dept_type(name_of_dept)
-            
-            # get district of dept
-            district_of_dept = d.find("a").text
-            
-            # get newsroom_nr (number in "blaulicht-link")
-            newsroom_nr = d.find("a")["href"].split("/")[-1]
-            
-            # build newsroom-link, go to newsroom and collect further data about newsroom
-            newsroom_link = LINK_BASE + "blaulicht/nr/" + str(newsroom_nr)
-            newsroom_html = utils.get_html(newsroom_link)
-            
-            # title of newsroom
-            newsroom_title = newsroom_html.find("h1", class_ = "newsroom-title").text
-            
-            # subtitle of newsroom
-            newsroom_subtitle = newsroom_html.find("div", class_ = "newsroom-extra").text
-            
-            # weblinks
-            newsroom_weblinks = newsroom_html.find("div", class_ = "newsroom-extra").find_all("a")
-            newsroom_weblinks = [[link["title"], link["href"]] for link in newsroom_weblinks]
-            
-            # store data in dict
-            department_data = {
-                "newsroom_nr": newsroom_nr,
-                "name_of_dept": name_of_dept,
-                "district_of_dept": district_of_dept,
-                "state_of_dept": name_of_state,
-                "newsroom_link": newsroom_link,
-                "newsroom_title": newsroom_title,
-                "newsroom_subtitle": newsroom_subtitle,
-                "newsroom_weblinks": newsroom_weblinks,
-                "dept_type": dept_type,
-                "scraping_datetime": datetime.datetime.now(),
-                }
-            
-            # append dict to data-list
-            data.append(department_data)
+                # get name of dept
+                name_of_dept = d.find("a")["title"]
+                name_of_dept = name_of_dept.replace("weiter zum newsroom von","")
+                
+                dept_type = utils.get_dept_type(name_of_dept)
+                
+                # get district of dept
+                district_of_dept = d.find("a").text
+                
+                # get newsroom_nr (number in "blaulicht-link")
+                newsroom_nr = d.find("a")["href"].split("/")[-1]
+                
+                # build newsroom-link, go to newsroom and collect further data about newsroom
+                newsroom_link = LINK_BASE + "blaulicht/nr/" + str(newsroom_nr)
+                newsroom_html = utils.get_html(newsroom_link)
+                
+                # title of newsroom
+                newsroom_title = newsroom_html.find("h1", class_ = "newsroom-title").text
+                
+                # subtitle of newsroom
+                newsroom_subtitle = newsroom_html.find("div", class_ = "newsroom-extra").text
+                
+                # weblinks
+                newsroom_weblinks = newsroom_html.find("div", class_ = "newsroom-extra").find_all("a")
+                newsroom_weblinks = [[link["title"], link["href"]] for link in newsroom_weblinks]
+                
+                # store data in dict
+                department_data = {
+                    "newsroom_nr": newsroom_nr,
+                    "name_of_dept": name_of_dept,
+                    "district_of_dept": district_of_dept,
+                    "state_of_dept": name_of_state,
+                    "newsroom_link": newsroom_link,
+                    "newsroom_title": newsroom_title,
+                    "newsroom_subtitle": newsroom_subtitle,
+                    "newsroom_weblinks": newsroom_weblinks,
+                    "dept_type": dept_type,
+                    "scraping_datetime": datetime.datetime.now(),
+                    }
+                
+                # append dict to data-list
+                data.append(department_data)
+
+            except Exception as error:
+                print("WARNING: error occured.")
+                print(error)
         
     df = pd.DataFrame(data)
     utils.print_status("finished scraping list of depts.")

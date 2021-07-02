@@ -138,3 +138,4 @@ config.ini
 /misc
 /output_data
 /temp
+/eval_split_files
