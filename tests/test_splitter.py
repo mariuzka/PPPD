@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 
-
+import pytest
 import src.ppSplitter as ppSplitter
-
-
-
 
 ###############################################################################
 
@@ -1694,57 +1691,55 @@ split37 = ['2016 – 13:19 Polizeipräsidium Karlsruhe Karlsruhe (ots) Erneut wa
 
 ###############################################################################
 
-def compare(text, split):
+
+def splitter_cases():
+
+    pairs = [
+        (text1, split1),
+        (text2, split2),
+        (text3, split3),
+        (text4, split4),
+        (text5, split5),
+        (text6, split6),
+        (text7, split7),
+        (text8, split8),
+        (text9, split9),
+        (text10, split10),
+        (text11, split11),
+        (text12, split12),
+        (text13, split13),
+        (text14, split14),
+        (text15, split15),
+        (text16, split16),
+        (text17, split17),
+        (text18, split18),
+        (text19, split19),
+        (text20, split20),
+        (text21, split21),
+        (text22, split22),
+        (text23, split23),
+        (text24, split24),
+        (text25, split25),
+        (text26, split26),
+        (text27, split27),
+        (text28, split28),
+        (text29, split29),
+        (text30, split30),
+        (text31, split31),
+        (text32, split32),
+        (text33, split33),
+        (text34, split34),
+        (text36, split36),
+        (text37, split37),
+        ]
+
+    for text, split in pairs:
+            yield text, split
+
+
+@pytest.mark.parametrize("case", splitter_cases())
+def test_splitter(case):
+    text, split = case
     list1 = [text.replace(" ", "") for text in ppSplitter.split_report(text)]
     list2 = [text.replace(" ", "") for text in split]
     assert list1 == list2, (list1, list2)
-
-
-pairs = [
-    (text1, split1),
-    (text2, split2),
-    (text3, split3),
-    (text4, split4),
-    (text5, split5),
-    (text6, split6),
-    (text7, split7),
-    (text8, split8),
-    (text9, split9),
-    (text10, split10),
-    (text11, split11),
-    (text12, split12),
-    (text13, split13),
-    (text14, split14),
-    (text15, split15),
-    (text16, split16),
-    (text17, split17),
-    (text18, split18),
-    (text19, split19),
-    (text20, split20),
-    (text21, split21),
-    (text22, split22),
-    (text23, split23),
-    (text24, split24),
-    (text25, split25),
-    (text26, split26),
-    (text27, split27),
-    (text28, split28),
-    (text29, split29),
-    (text30, split30),
-    (text31, split31),
-    (text32, split32),
-    (text33, split33),
-    (text34, split34),
-    (text36, split36),
-    (text37, split37),
-    ]
-
-for i, (text, split) in enumerate(pairs):
-    print(i+1)
-    compare(text, split)
-print("All tests passed!")
-
-
-
-
-
