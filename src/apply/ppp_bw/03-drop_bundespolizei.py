@@ -10,7 +10,6 @@ from src import ppCleaner as ppc
 datasets_path = Path.joinpath(src.PATH, "output_data", "ppp_bw", "articles", "state_datasets", "baden-württemberg")
 
 years = [
-    2014,
     2015,
     2016,
     2017,
