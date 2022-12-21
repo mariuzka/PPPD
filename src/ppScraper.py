@@ -140,8 +140,9 @@ def search_by_newsroom_and_date(newsroom_link, date):
     search_link = newsroom_link + "/?startDate=" + date + "&endDate=" + date
     html = utils.get_html(search_link)
     articles = html.find_all("article", class_ = "news")
-    article_links = [article["data-url"] for article in articles]
-    article_links = ["https://www.presseportal.de/" + link for link in article_links]
+    article_links = [article["data-url-ugly"] for article in articles]
+    article_links = [link.replace("@", "/") for link in article_links]
+    
     
     return article_links
             
