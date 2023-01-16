@@ -1,6 +1,6 @@
 [DB]
-user = 
-pwd = 
-host = localhost
-port = 5432
-database = pppd
+POSTGRES_USER = 
+POSTGRES_PASSWORD = 
+POSTGRES_HOST = 
+POSTGRES_PORT = 5432
+POSTGRES_DB = pppd

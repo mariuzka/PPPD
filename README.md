@@ -8,6 +8,7 @@ The purpose of **PPPD** (**P**rojekt-**P**olizei-**P**resse-**D**aten) is mainly
 2. Install the conda environment from the file "env.yaml".
 
 
+
 ## Usage
 
 The simplest way of scraping press releases from [Presseportal-Blaulicht](https://www.presseportal.de/blaulicht/) is to use the function `get_blaulicht_data()` from the module `ppRunner`. This function downloads and processes every press release from every newsroom in the given federal states and years of interest.
@@ -45,3 +46,13 @@ ppr.get_blaulicht_data(
 **Update an existing output folder**
 
 ... 
+
+## Database usage (work in progress)
+
+If you want to use the PostgreSQL DB, fire up a docker container with the `docker-compose.yml`: 
+
+```sh 
+sudo docker-compose -f docker-compose.prod.yml --env-file config.ini up
+```  
+
+Don't forget to provide the credentials within the `config.ini`.

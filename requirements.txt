@@ -1,7 +1,7 @@
 pandas
 beautifulsoup4
 requests
-#- psycopg2
+psycopg2-binary
 sqlalchemy
 sqlalchemy-stubs
 openpyxl

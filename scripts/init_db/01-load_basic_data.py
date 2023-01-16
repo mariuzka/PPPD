@@ -26,12 +26,12 @@ def parse_newsroom(state, year, newsroom):
 
     for file in newsroom.iterdir():
         newsroom_nr, published, i, crawled = file.name.rstrip(".txt").split("_")
-        
+
         published = dt.datetime.strptime(published, "%Y-%m-%d")
         crawled = dt.datetime.strptime(crawled, "%Y-%m-%d-%H-%M-%S")
         
         content = file.read_text(encoding="utf-8")
-        
+
         html = bs(content, "html.parser")
         
         article_data = ppc.extract_article_data(html, newsroom_nr)
@@ -78,11 +78,14 @@ def main():
     # create tables from src.models.Base
     Base.metadata.create_all(bind=engine)
 
-    data_folder_path = Path.joinpath(src.PATH, "output_data", DATA_FOLDER_NAME, "articles", "raw_article_html")
-    
+    data_folder_path = Path.joinpath(
+        src.PATH, "output_data", DATA_FOLDER_NAME, "articles", "raw_article_html"
+    )
+
     for state in Path(data_folder_path).iterdir():
         for year in state.iterdir():
             for newsroom in year.iterdir():
+                print(newsroom)
                 parse_newsroom(state, year, newsroom)
 
     add_final_indexes()
