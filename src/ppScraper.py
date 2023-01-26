@@ -12,6 +12,10 @@ import requests
 
 import src
 from src import utils
+from src.models import Newsroom, Newsroom_visit
+
+from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import UniqueViolation
 
 
 LINK_BASE = "https://www.presseportal.de/"
@@ -26,17 +30,25 @@ def get_dept_data():
     This function collects informations of all departments listed on this page: 
     "https://www.presseportal.de/blaulicht/dienststellen".
     For each department found on the page, the scraper visits the newsroom of 
-    the dept and collects further information about the newsroom.
-    The resulting dataset is the starting point for scraping the articles of all
-    newsrooms.
+    the dept and collects further information about the newsroom and writes it
+    to tabele newsrooms.
+    The function tracks each subequent scraping in table newsroom_visits. 
+    If Newsroom properties change, a new instance is added. 
     
     INPUT
     None
     
     OUTPUT
-    df: a dataframe containing the informations about depts
+    If Newsroom not in DB or does not meet unique constraint: 
+    add db entry for Newsroom and add entry for Newsroom_visit.
+    If Newsroom unchanged, only add entry for Newsroom_visit. 
+
+    Todo: Initiate task for queue: Scrape Articles for Newsrooms 
     """
     
+    global engine, Session
+    session = Session()
+
     utils.print_status("start scraping list of departments.")
 
     # website containing overview of departments on presseportal/blaulicht
@@ -54,7 +66,7 @@ def get_dept_data():
     
     # for every state
     for i, s in enumerate(states):
-        
+        pass
         # Get the name of the state
         name_of_state = s.find("a", class_ = "dienststellen-ankh")["name"]
         
@@ -63,9 +75,10 @@ def get_dept_data():
         
         # for every department in the state
         for d in departments:
-
+            pass           
             try:
-            
+                session = Session()
+
                 # get name of dept
                 name_of_dept = d.find("a")["title"]
                 name_of_dept = name_of_dept.replace("weiter zum newsroom von","")
@@ -92,30 +105,81 @@ def get_dept_data():
                 newsroom_weblinks = newsroom_html.find("div", class_ = "newsroom-extra").find_all("a")
                 newsroom_weblinks = [[link["title"], link["href"]] for link in newsroom_weblinks]
                 
-                # store data in dict
-                department_data = {
-                    "newsroom_nr": newsroom_nr,
-                    "name_of_dept": name_of_dept,
-                    "district_of_dept": district_of_dept,
-                    "state_of_dept": name_of_state,
-                    "newsroom_link": newsroom_link,
-                    "newsroom_title": newsroom_title,
-                    "newsroom_subtitle": newsroom_subtitle,
-                    "newsroom_weblinks": newsroom_weblinks,
-                    "dept_type": dept_type,
-                    "scraping_datetime": datetime.datetime.now(),
-                    }
+                # instanciate classes
+                newsroom = Newsroom()
                 
-                # append dict to data-list
-                data.append(department_data)
+                newsroom = Newsroom(
+                    newsroom_nr = newsroom_nr,
+                    title = newsroom_title,
+                    subtitle = newsroom_subtitle,
+                    dept_name = name_of_dept,
+                    dept_district = district_of_dept,
+                    dept_state = name_of_state,
+                    link = newsroom_link,
+                    weblinks = str(newsroom_weblinks),
+                    dept_type = dept_type,
+                )
+
+                add_newsrooms_and_visits_to_db(newsroom)
 
             except Exception as error:
                 print("WARNING: error occured.")
                 print(error)
         
-    df = pd.DataFrame(data)
     utils.print_status("finished scraping list of depts.")
-    return df
+
+
+def add_newsrooms_and_visits_to_db(newsroom):
+    """
+    Handles unique constraint exceptions for Newsrooms
+
+    Newsrooms are added to the database by adding a Newsroom_visit that backpopulates
+    to the related Newsroom.
+    Newsrooms are unique, as long as all properties are equal (see UniqueConstraint
+    in model definition). As properties of Newsrooms may change, a new instance with
+    a new PK is added to the db.
+    For a revisit (a newerly Newsroom_visit) of an already existing instance of Newsroom,
+    a unique constraint exceptions is raised - and catched within this function.
+    In this case, the Newsroom_visit gets the existing Newsroom instance as foreign key.
+    """
+
+    session = Session()
+    scraping_datetime = datetime.datetime.now()
+    newsroom_visit = Newsroom_visit(scraping_datetime=scraping_datetime)
+    newsroom_visit.newsroom = newsroom
+    session.add(newsroom_visit)
+    try:
+        session.flush()
+    except IntegrityError as e:
+        session.rollback()
+        session.close()
+        if isinstance(e.orig, UniqueViolation):
+            print("Newsroom already exists...")
+            # Check if Newsroom exists ()
+            session = Session()
+            q = session.query(Newsroom).filter_by(
+                newsroom_nr=newsroom.newsroom_nr,
+                title=newsroom.title,
+                subtitle=newsroom.subtitle,
+                dept_name=newsroom.dept_name,
+                dept_district=newsroom.dept_district,
+                dept_state=newsroom.dept_state,
+                link=newsroom.link,
+                weblinks=newsroom.weblinks,
+                dept_type=newsroom.dept_type,
+            )
+            # If Newsroom exists,
+            if session.query(q.exists()).scalar():
+                print("Adding Newsroom_visit...")
+                newsroom_visit = Newsroom_visit(scraping_datetime=scraping_datetime)
+                newsroom_visit.newsroom = q.first()
+                session.add(newsroom_visit)
+    try:
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        print(e)
+    session.close()
 
 
 ###############################################################################

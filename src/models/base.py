@@ -30,6 +30,7 @@ class Article(Base, Str):
 
     id = Column(Integer, primary_key=True)
     newsroom_id = Column(Integer, ForeignKey("newsrooms.id"))
+    newsroom_visit_id = Column(Integer, ForeignKey("newsroom_visits.id"))
     date = Column(Date)
     daily_index = Column(Integer)
     scraped_at = Column(DateTime)
@@ -46,13 +47,25 @@ class Article(Base, Str):
     topic_tags_scores = Column(Text)
 
     newsroom = relationship("Newsroom", back_populates="articles", uselist=False)
-    raw_html = relationship("ArticleHTML", backref="article", uselist=False)
+    newsroom_visit = relationship("Newsroom_visit", back_populates="articles")
+    article_html = relationship("ArticleHTML", back_populates="article", uselist=False)
 
 
 class Newsroom(Base, Str):
-    __tablename__ = "newsrooms"
+    """
+    Class to collect Newsrooms
 
-    id = Column(Integer, primary_key=True)
+    To track, whether Newsroom properties change, we pose
+    a unique constraint an all fields. 
+    """
+
+    __tablename__ = "newsrooms"
+    __table_args__ = (UniqueConstraint("newsroom_nr","title", "subtitle", 
+        "dept_name", "dept_district", "dept_state", "dept_type",
+            "link", "weblinks"),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    newsroom_nr = Column(Integer)
 
     title = Column(Text)
     subtitle = Column(Text)
@@ -66,8 +79,19 @@ class Newsroom(Base, Str):
     weblinks = Column(Text)
 
     articles = relationship("Article", back_populates="newsroom")
+    visits = relationship("Newsroom_visit", back_populates="newsroom")
 
+
+class Newsroom_visit(Base, Str):
+    __tablename__ = "newsroom_visits"
+    __table_args__ = (UniqueConstraint("newsroom_id", "scraping_datetime"),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    newsroom_id = Column(Integer, ForeignKey("newsrooms.id"))
     scraping_datetime = Column(DateTime, default=dt.datetime.now)
+
+    newsroom = relationship("Newsroom", back_populates="visits", uselist=False)
+    articles = relationship("Article", back_populates="newsroom_visit")
 
 
 class ArticleHTML(Base, Str):
@@ -75,3 +99,5 @@ class ArticleHTML(Base, Str):
 
     article_id = Column(Integer, ForeignKey("articles.id"), primary_key=True)
     html = Column(Text)
+
+    article = relationship("Article", back_populates="article_html")

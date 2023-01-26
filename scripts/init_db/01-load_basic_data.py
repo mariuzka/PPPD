@@ -20,7 +20,7 @@ def parse_newsroom(state, year, newsroom):
     room = session.query(Newsroom).filter_by(id=newsroom.name).one_or_none()
     if not room:
         room = Newsroom(
-            id=newsroom.name,
+            newsroom_nr=newsroom.name,
         )
         session.add(room)
 
@@ -50,7 +50,7 @@ def parse_newsroom(state, year, newsroom):
             topic_tags_scores = article_data["topic_tags_scores"],
         )
         article.newsroom = room
-        article.raw_html = ArticleHTML(html=content)
+        article.article_html = ArticleHTML(html=content)
         session.add(article)
 
     session.commit()
