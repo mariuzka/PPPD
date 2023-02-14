@@ -7,6 +7,9 @@ PATH = Path(__file__).parent.parent
 config = ConfigParser()
 config.read(Path.joinpath(PATH, "config.ini"))
 
+DEVEL_MODE = config.get("PPPD", "DEVEL_MODE")
+
+
 try:
     user = config.get("DB", "POSTGRES_USER")
     pwd = config.get("DB", "POSTGRES_PASSWORD")

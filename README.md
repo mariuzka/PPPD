@@ -5,7 +5,8 @@ The purpose of **PPPD** (**P**rojekt-**P**olizei-**P**resse-**D**aten) is mainly
 
 ## Installation
 1. Clone/download this repository.
-2. Install the conda environment from the file "env.yaml".
+2. Populate `config.ini` (see [`config.ini[EXAMPLE]`](config.ini[EXAMPLE]), use `DEVEL_MODE=True` to toggle the webscraping to a small subset as proof of concept).
+3. Install the conda environment from the file "env.yaml".
 
 
 
@@ -49,7 +50,7 @@ ppr.get_blaulicht_data(
 
 ## Database usage (work in progress)
 
-If you want to use the PostgreSQL DB, fire up a docker container with the `docker-compose.yml`: 
+If you want to use PostgreSQL as database, fire up a docker environment e.g. as provided in the `docker-compose.yml`: 
 
 ```sh 
 sudo docker-compose -f docker-compose.yml --env-file config.ini up

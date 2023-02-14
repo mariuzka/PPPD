@@ -11,6 +11,7 @@ import pandas as pd
 import requests
 
 import src
+from src import DEVEL_MODE
 from src import utils
 from src.models import Newsroom, Newsroom_visit
 
@@ -70,9 +71,14 @@ def get_dept_data():
         # Get the name of the state
         name_of_state = s.find("a", class_ = "dienststellen-ankh")["name"]
         
+        # For development
+        if DEVEL_MODE:
+            if name_of_state != "baden-württemberg":
+                continue
+        
         # find all departments in the state
         departments = s.find_all("div", class_ = "col four")
-        
+
         # for every department in the state
         for d in departments:
             pass           
@@ -105,9 +111,7 @@ def get_dept_data():
                 newsroom_weblinks = newsroom_html.find("div", class_ = "newsroom-extra").find_all("a")
                 newsroom_weblinks = [[link["title"], link["href"]] for link in newsroom_weblinks]
                 
-                # instanciate classes
-                newsroom = Newsroom()
-                
+                # Newsroom
                 newsroom = Newsroom(
                     newsroom_nr = newsroom_nr,
                     title = newsroom_title,
@@ -168,7 +172,7 @@ def add_newsrooms_and_visits_to_db(newsroom):
                 weblinks=newsroom.weblinks,
                 dept_type=newsroom.dept_type,
             )
-            # If Newsroom exists,
+            # If Newsroom exists
             if session.query(q.exists()).scalar():
                 print("Adding Newsroom_visit...")
                 newsroom_visit = Newsroom_visit(scraping_datetime=scraping_datetime)
