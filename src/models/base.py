@@ -80,6 +80,7 @@ class Newsroom(Base, Str):
 
     articles = relationship("Article", back_populates="newsroom")
     visits = relationship("Newsroom_visit", back_populates="newsroom")
+    reports = relationship("Report", back_populates="newsroom")
 
 
 class Newsroom_visit(Base, Str):
@@ -101,3 +102,38 @@ class ArticleHTML(Base, Str):
     html = Column(Text)
 
     article = relationship("Article", back_populates="article_html")
+
+
+class Report(Base, Str):
+    """
+    Reports are populated by csv import to DB (no article id provided)
+    ToDo: Deeper integration in pipeline raw_html -> splitter -> db
+    Then, article ID and neweroom ID can be used for db relation
+    When relation is preserved, some fields get redundant
+    """
+
+    __tablename__ = "reports"
+    #__table_args__ = (UniqueConstraint("article_link", "snippet_id"),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    #article_id = Column(Integer, ForeignKey("articles.id"))
+    article_link = Column(Text)
+    newsroom_nr = Column(Integer)
+    #newsroom_id = Column(Integer, ForeignKey("newsrooms.id"))
+    from_presseportal = Column(Integer)
+    newsroom = Column(Text)
+    date_release = Column(Text)
+    location = Column(Text)
+    header = Column(Text)
+    location_tags_names = Column(Text)
+    location_tags_scores = Column(Text)
+    topic_tags_names = Column(Text)
+    topic_tags_scores = Column(Text)
+    scraping_date_time = Column(Text)
+    state = Column(Text)
+    text_snippet = Column(Text)
+    n_snippets = Column(Integer)
+    snippet_id = Column(Integer)
+
+    #newsroom = relationship("Newsroom", back_populates="reports", uselist=False)
+    #article = relationship("Article", back_populates="reports")

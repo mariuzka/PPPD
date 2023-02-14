@@ -214,3 +214,28 @@ def split_reports_bw(state, year, output_folder_name, n=False):
     
     # save
     df_split.to_csv(Path.joinpath(folder_path, state + "_" + year + "_split.csv"), index = False)
+
+
+
+
+def splitted_reports_csv_to_db(output_folder_name, state, year, engine):
+    year = str(year)
+    
+    # load data
+    folder_path = Path.joinpath(
+        src.PATH, 
+        "output_data",
+        output_folder_name,
+        "articles", 
+        "state_datasets", 
+        state,
+    )
+    
+    df = pd.read_csv(Path.joinpath(folder_path, state + "_" + year + "_split.csv"))
+    try:
+        df = df.drop(columns=["Unnamed: 0", "Unnamed: 0.1"])
+    except: 
+        pass
+
+    df.to_sql(name='reports', con=engine, if_exists = 'append', index=False)
+        
