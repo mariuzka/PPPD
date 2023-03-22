@@ -18,7 +18,7 @@ class Str:
     def __repr__(self):
         name = self.__class__.__name__
 
-        columns = self.__table__.c
+        columns = self.__table__.c  # type: ignore
         colnames = [f"{c.name}={getattr(self, c.name)}" for c in columns]
 
         return f"{name}({', '.join(colnames)})"
@@ -34,7 +34,7 @@ class Article(Base, Str):
     date = Column(Date)
     daily_index = Column(Integer)
     scraped_at = Column(DateTime)
-    
+
     article_link = Column(Text)
     newsroom_nr = Column(Text)
     from_presseportal = Column(Text)
@@ -56,13 +56,23 @@ class Newsroom(Base, Str):
     Class to collect Newsrooms
 
     To track, whether Newsroom properties change, we pose
-    a unique constraint an all fields. 
+    a unique constraint an all fields.
     """
 
     __tablename__ = "newsrooms"
-    __table_args__ = (UniqueConstraint("newsroom_nr","title", "subtitle", 
-        "dept_name", "dept_district", "dept_state", "dept_type",
-            "link", "weblinks"),)
+    __table_args__ = (
+        UniqueConstraint(
+            "newsroom_nr",
+            "title",
+            "subtitle",
+            "dept_name",
+            "dept_district",
+            "dept_state",
+            "dept_type",
+            "link",
+            "weblinks",
+        ),
+    )
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     newsroom_nr = Column(Integer)
@@ -113,13 +123,13 @@ class Report(Base, Str):
     """
 
     __tablename__ = "reports"
-    #__table_args__ = (UniqueConstraint("article_link", "snippet_id"),)
+    # __table_args__ = (UniqueConstraint("article_link", "snippet_id"),)
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    #article_id = Column(Integer, ForeignKey("articles.id"))
+    # article_id = Column(Integer, ForeignKey("articles.id"))
     article_link = Column(Text)
     newsroom_nr = Column(Integer)
-    #newsroom_id = Column(Integer, ForeignKey("newsrooms.id"))
+    # newsroom_id = Column(Integer, ForeignKey("newsrooms.id"))
     from_presseportal = Column(Integer)
     newsroom = Column(Text)
     date_release = Column(Text)
@@ -135,5 +145,5 @@ class Report(Base, Str):
     n_snippets = Column(Integer)
     snippet_id = Column(Integer)
 
-    #newsroom = relationship("Newsroom", back_populates="reports", uselist=False)
-    #article = relationship("Article", back_populates="reports")
+    # newsroom = relationship("Newsroom", back_populates="reports", uselist=False)
+    # article = relationship("Article", back_populates="reports")

@@ -3,11 +3,13 @@
 import datetime
 import os
 from pathlib import Path
+
 # import random
 import time
 
 # from bs4 import BeautifulSoup as bs
 import pandas as pd
+
 # import requests
 
 import src
@@ -66,11 +68,11 @@ def get_dept_data():
 
     # for every state
     for i, s in enumerate(states):
-        pass
+        print("state ", i)
         # Get the name of the state
         name_of_state = s.find("a", class_="dienststellen-ankh")["name"]
 
-        # For development
+        # For development only take state of Baden-Württemberg
         if DEVEL_MODE:
             if name_of_state != "baden-württemberg":
                 continue
@@ -80,10 +82,8 @@ def get_dept_data():
 
         # for every department in the state
         for d in departments:
-            pass
             try:
-                #session = Session()
-
+                # session = Session()
                 # get name of dept
                 name_of_dept = d.find("a")["title"]
                 name_of_dept = name_of_dept.replace("weiter zum newsroom von", "")
@@ -115,25 +115,34 @@ def get_dept_data():
                 newsroom_weblinks = [
                     [link["title"], link["href"]] for link in newsroom_weblinks
                 ]
-
-                # Newsroom
-                newsroom = Newsroom(
-                    newsroom_nr=newsroom_nr,
-                    title=newsroom_title,
-                    subtitle=newsroom_subtitle,
-                    dept_name=name_of_dept,
-                    dept_district=district_of_dept,
-                    dept_state=name_of_state,
-                    link=newsroom_link,
-                    weblinks=str(newsroom_weblinks),
-                    dept_type=dept_type,
-                )
-
-                add_newsrooms_and_visits_to_db(newsroom)
-
             except Exception as error:
                 print("WARNING: error occured.")
                 print(error)
+
+            # Newsroom
+            newsroom = Newsroom(
+                newsroom_nr=newsroom_nr,
+                title=newsroom_title,
+                subtitle=newsroom_subtitle,
+                dept_name=name_of_dept,
+                dept_district=district_of_dept,
+                dept_state=name_of_state,
+                link=newsroom_link,
+                weblinks=str(newsroom_weblinks),
+                dept_type=dept_type,
+            )
+
+            scraping_datetime = datetime.datetime.now()
+            newsroom_visit = Newsroom_visit(scraping_datetime=scraping_datetime)
+            newsroom_visit.newsroom = newsroom
+            session.add(newsroom_visit)
+            try:
+                session.flush()
+            except IntegrityError as e:
+                session.rollback()
+                session.close()
+
+                # add_newsrooms_and_visits_to_db(newsroom)
 
     utils.print_status("finished scraping list of depts.")
 
