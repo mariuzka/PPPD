@@ -87,7 +87,8 @@ class Newsroom(Base, Str):
 
     link = Column(Text)
     weblinks = Column(Text)
-
+    scraping_datetime = Column(DateTime, default=dt.datetime.now)
+    
     articles = relationship("Article", back_populates="newsroom")
     visits = relationship("Newsroom_visit", back_populates="newsroom")
     reports = relationship("Report", back_populates="newsroom")
