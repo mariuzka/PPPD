@@ -6,7 +6,7 @@ from sqlalchemy import Index
 from sqlalchemy.exc import ProgrammingError
 
 import src
-from src.models import *
+from src.models import Base, Newsroom, Article, ArticleHTML
 from src import ppCleaner as ppc
 
 
@@ -29,25 +29,25 @@ def parse_newsroom(state, year, newsroom):
 
         published = dt.datetime.strptime(published, "%Y-%m-%d")
         crawled = dt.datetime.strptime(crawled, "%Y-%m-%d-%H-%M-%S")
-        
+
         content = file.read_text(encoding="utf-8")
 
         html = bs(content, "html.parser")
-        
+
         article_data = ppc.extract_article_data(html, newsroom_nr)
-        
+
         article = Article(
             date=published,
             scraped_at=crawled,
             daily_index=i,
-            article_link = article_data["article_link"],
-            location = article_data["location"],
-            header = article_data["header"],
-            text = article_data["text"],
-            location_tags_names = article_data["location_tags_names"],
-            location_tags_scores = article_data["location_tags_scores"],
-            topic_tags_names = article_data["topic_tags_names"],
-            topic_tags_scores = article_data["topic_tags_scores"],
+            article_link=article_data["article_link"],
+            location=article_data["location"],
+            header=article_data["header"],
+            text=article_data["text"],
+            location_tags_names=article_data["location_tags_names"],
+            location_tags_scores=article_data["location_tags_scores"],
+            topic_tags_names=article_data["topic_tags_names"],
+            topic_tags_scores=article_data["topic_tags_scores"],
         )
         article.newsroom = room
         article.article_html = ArticleHTML(html=content)
@@ -70,7 +70,6 @@ def add_final_indexes():
             index.create(bind=engine)
         except ProgrammingError:
             pass
-
 
 
 def main():

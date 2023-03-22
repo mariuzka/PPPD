@@ -1,6 +1,6 @@
-import src 
-from src.models import *
-from src.ppCleaner import splitted_reports_csv_to_db 
+import src
+# from src.models import *
+from src.ppCleaner import splitted_reports_csv_to_db
 
 engine, Session = src.db_connection(init=False)
 

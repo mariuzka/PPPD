@@ -53,7 +53,7 @@ ppr.get_blaulicht_data(
 If you want to use PostgreSQL as database, fire up a docker environment e.g. as provided in the `docker-compose.yml`: 
 
 ```sh 
-sudo docker-compose -f docker-compose.yml --env-file config.ini up
+sudo docker-compose -f docker-compose.yml --env-file config.ini up -d
 ```  
 
 Don't forget to provide the credentials within the `config.ini`.
