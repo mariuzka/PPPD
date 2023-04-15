@@ -17,7 +17,7 @@ def parse_newsroom(state, year, newsroom):
     global engine, Session
     session = Session()
 
-    room = session.query(Newsroom).filter_by(id=newsroom.name).one_or_none()
+    room = session.query(Newsroom).filter_by(newsroom_nr=newsroom.name).one_or_none()
     if not room:
         room = Newsroom(
             newsroom_nr=newsroom.name,
@@ -41,6 +41,7 @@ def parse_newsroom(state, year, newsroom):
             scraped_at=crawled,
             daily_index=i,
             article_link=article_data["article_link"],
+            newsroom_nr=newsroom_nr,
             location=article_data["location"],
             header=article_data["header"],
             text=article_data["text"],
@@ -84,7 +85,6 @@ def main():
     for state in Path(data_folder_path).iterdir():
         for year in state.iterdir():
             for newsroom in year.iterdir():
-                print(newsroom)
                 parse_newsroom(state, year, newsroom)
 
     add_final_indexes()

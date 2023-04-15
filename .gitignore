@@ -135,6 +135,9 @@ dmypy.json
 # exclude config ini w/ passwords
 config.ini
 
+# exclude local helper
+start.sh
+
 # folders
 /misc
 /output_data

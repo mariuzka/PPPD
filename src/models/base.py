@@ -49,6 +49,7 @@ class Article(Base, Str):
     newsroom = relationship("Newsroom", back_populates="articles", uselist=False)
     newsroom_visit = relationship("Newsroom_visit", back_populates="articles")
     article_html = relationship("ArticleHTML", back_populates="article", uselist=False)
+    reports = relationship("Report", back_populates="article")
 
 
 class Newsroom(Base, Str):
@@ -87,8 +88,7 @@ class Newsroom(Base, Str):
 
     link = Column(Text)
     weblinks = Column(Text)
-    scraping_datetime = Column(DateTime, default=dt.datetime.now)
-    
+
     articles = relationship("Article", back_populates="newsroom")
     visits = relationship("Newsroom_visit", back_populates="newsroom")
     reports = relationship("Report", back_populates="newsroom")
@@ -127,10 +127,10 @@ class Report(Base, Str):
     # __table_args__ = (UniqueConstraint("article_link", "snippet_id"),)
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    # article_id = Column(Integer, ForeignKey("articles.id"))
+    article_id = Column(Integer, ForeignKey("articles.id"))
     article_link = Column(Text)
     newsroom_nr = Column(Integer)
-    # newsroom_id = Column(Integer, ForeignKey("newsrooms.id"))
+    newsroom_id = Column(Integer, ForeignKey("newsrooms.id"))
     from_presseportal = Column(Integer)
     newsroom = Column(Text)
     date_release = Column(Text)
@@ -146,5 +146,5 @@ class Report(Base, Str):
     n_snippets = Column(Integer)
     snippet_id = Column(Integer)
 
-    # newsroom = relationship("Newsroom", back_populates="reports", uselist=False)
-    # article = relationship("Article", back_populates="reports")
+    newsroom = relationship("Newsroom", back_populates="reports", uselist=False)
+    article = relationship("Article", back_populates="reports")

@@ -38,11 +38,20 @@ def import_newsroom_legacy_data(output_folder_name, engine):
                                     'state_of_dept': 'dept_state',
                                     'newsroom_link': 'link',
                                     'newsroom_weblinks': 'weblinks'})
-    df_all = df_all.drop(columns=['scraping_datetime'])
-    df_all = df_all.drop_duplicates()
+
+    df_all = df_all.drop_duplicates(subset=df_all.columns.difference(['scraping_datetime']))
     df_all = df_all.sort_values(by='newsroom_nr')
+    df_all.reset_index(inplace=True, drop=True)
+    df_all.index = df_all.index + 1
+
+    df_visits = df_all[['scraping_datetime']].copy()
+    df_visits['newsroom_id'] = df_visits.index
+
+    df_all.drop(columns=['scraping_datetime'], inplace=True)
+
     df_all.to_sql(name="newsrooms", con=engine, if_exists="append", index=False)
-    return (df_all)
+    df_visits.to_sql(name="newsroom_visits", con=engine, if_exists="append", index=False)
 
 
 import_newsroom_legacy_data(output_folder_name, engine)
+
