@@ -6,7 +6,7 @@ from sqlalchemy import Index
 from sqlalchemy.exc import ProgrammingError
 
 import src
-from src.models import Base, Newsroom, Article, ArticleHTML
+from src.models import Base, Newsroom, Newsroom_visit, Article, ArticleHTML
 from src import ppCleaner as ppc
 
 
@@ -51,6 +51,7 @@ def parse_newsroom(state, year, newsroom):
             topic_tags_scores=article_data["topic_tags_scores"],
         )
         article.newsroom = room
+        article.newsroom_visit = session.query(Newsroom_visit).filter_by(newsroom_id=room.id).one_or_none()
         article.article_html = ArticleHTML(html=content)
         session.add(article)
 

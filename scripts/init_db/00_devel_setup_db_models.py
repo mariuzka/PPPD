@@ -54,4 +54,3 @@ def import_newsroom_legacy_data(output_folder_name, engine):
 
 
 import_newsroom_legacy_data(output_folder_name, engine)
-
