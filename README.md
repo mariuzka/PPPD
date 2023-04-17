@@ -57,3 +57,5 @@ sudo docker-compose -f docker-compose.yml --env-file config.ini up -d
 ```  
 
 Don't forget to provide the credentials within the `config.ini`.
+
+To import legacy data (from csv and txt files from the initial webscraping) rund script `01-load_basic_data.py` from the folder `scripts/init_db`. It creates the database and fills the tables (takes ~5-10 minutes).

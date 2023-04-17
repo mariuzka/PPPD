@@ -1,16 +1,64 @@
 import datetime as dt
 from pathlib import Path
 
+import pandas as pd
 from bs4 import BeautifulSoup as bs
 from sqlalchemy import Index
 from sqlalchemy.exc import ProgrammingError
 
 import src
 from src import ppCleaner as ppc
-from src.models import Article, ArticleHTML, Newsroom, Newsroom_visit
+from src.models import Article, ArticleHTML, Base, Newsroom, Newsroom_visit
 from src.ppSplitter import split_articles_and_add_reports_to_db
 
 DATA_FOLDER_NAME = "ppp_bw"
+
+
+def import_newsroom_legacy_data(output_folder_name, engine):
+    """
+    Imports legacy csv files of newrooms to database
+    """
+    folder_path = Path.joinpath(
+        src.PATH,
+        "output_data",
+        output_folder_name,
+        "departments",
+    )
+
+    list_of_dfs = []
+    for f in Path(folder_path).iterdir():
+        df = pd.read_csv(Path.joinpath(folder_path, f.name))
+        list_of_dfs.append(df)
+
+    df_all = pd.concat(list_of_dfs, ignore_index=False)
+    df_all = df_all.rename(
+        columns={
+            "newsroom_title": "title",
+            "newsroom_subtitle": "subtitle",
+            "name_of_dept": "dept_name",
+            "district_of_dept": "dept_district",
+            "state_of_dept": "dept_state",
+            "newsroom_link": "link",
+            "newsroom_weblinks": "weblinks",
+        }
+    )
+
+    df_all = df_all.drop_duplicates(
+        subset=df_all.columns.difference(["scraping_datetime"])
+    )
+    df_all = df_all.sort_values(by="newsroom_nr")
+    df_all.reset_index(inplace=True, drop=True)
+    df_all.index = df_all.index + 1
+
+    df_visits = df_all[["scraping_datetime"]].copy()
+    df_visits["newsroom_id"] = df_visits.index
+
+    df_all.drop(columns=["scraping_datetime"], inplace=True)
+
+    df_all.to_sql(name="newsrooms", con=engine, if_exists="append", index=False)
+    df_visits.to_sql(
+        name="newsroom_visits", con=engine, if_exists="append", index=False
+    )
 
 
 def parse_newsroom(state, year, newsroom):
@@ -51,7 +99,9 @@ def parse_newsroom(state, year, newsroom):
             topic_tags_scores=article_data["topic_tags_scores"],
         )
         article.newsroom = room
-        article.newsroom_visit = session.query(Newsroom_visit).filter_by(newsroom_id=room.id).one_or_none()
+        article.newsroom_visit = (
+            session.query(Newsroom_visit).filter_by(newsroom_id=room.id).one_or_none()
+        )
         article.article_html = ArticleHTML(html=content)
         session.add(article)
         split_articles_and_add_reports_to_db(article, session)
@@ -76,9 +126,11 @@ def add_final_indexes():
 
 
 def main():
+    # Drops and recreates DB
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(bind=engine)
 
-    # create tables from src.models.Base
-    # Base.metadata.create_all(bind=engine)
+    import_newsroom_legacy_data(DATA_FOLDER_NAME, engine)
 
     data_folder_path = Path.joinpath(
         src.PATH, "output_data", DATA_FOLDER_NAME, "articles", "raw_article_html"
