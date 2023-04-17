@@ -6,9 +6,9 @@ from sqlalchemy import Index
 from sqlalchemy.exc import ProgrammingError
 
 import src
-from src.models import Base, Newsroom, Newsroom_visit, Article, ArticleHTML
 from src import ppCleaner as ppc
-
+from src.models import Article, ArticleHTML, Newsroom, Newsroom_visit
+from src.ppSplitter import split_articles_and_add_reports_to_db
 
 DATA_FOLDER_NAME = "ppp_bw"
 
@@ -54,6 +54,7 @@ def parse_newsroom(state, year, newsroom):
         article.newsroom_visit = session.query(Newsroom_visit).filter_by(newsroom_id=room.id).one_or_none()
         article.article_html = ArticleHTML(html=content)
         session.add(article)
+        split_articles_and_add_reports_to_db(article, session)
 
     session.commit()
     session.close()
@@ -77,7 +78,7 @@ def add_final_indexes():
 def main():
 
     # create tables from src.models.Base
-    Base.metadata.create_all(bind=engine)
+    # Base.metadata.create_all(bind=engine)
 
     data_folder_path = Path.joinpath(
         src.PATH, "output_data", DATA_FOLDER_NAME, "articles", "raw_article_html"

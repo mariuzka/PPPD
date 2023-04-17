@@ -1,12 +1,12 @@
 import copy
-from pathlib import Path
 import pickle
+from pathlib import Path
 
 import pandas as pd
 
 import src
 from src import utils
-
+from src.models import Report
 
 SEP = " #+#+#+#+#+# "
 SEP_strip = SEP.strip()
@@ -115,7 +115,6 @@ def split_report_part1(text):
 
         # wenn ein ":" im Wort ist
         if ":" in word and not word[0].isnumeric() and word not in ignore_list:
-
             # wenn das Wort bzw. die zwei Wörter vor dem ":" ein Ortsname ist
             if (
                 is_location(word[:-1])
@@ -305,6 +304,31 @@ def split_report(text):
     return splitted_report
 
 
+def split_articles_and_add_reports_to_db(article, session):
+    """
+    Takes article and splits if multiple reports are present
+
+    OUTPUT
+    Multiple instances of `Report` written in DB
+    """
+    if len(article.text) > 120:
+        splitted_report = split_report(article.text)
+    else:
+        splitted_report = [article.text]
+
+    no_of_reports = len(splitted_report)
+    for i, r in enumerate(splitted_report):
+        i += 1
+        report = Report(
+            text_snippet=r,
+            n_snippets=no_of_reports,
+            snippet_id=i,
+        )
+        report.newsroom = article.newsroom
+        report.article = article
+        session.add(report)
+
+
 def split_reports_in_df(df, report_col, drop=True):
     """Splittet alle Texte innerhalb einer Dataframe-Spalte."""
 
@@ -319,7 +343,6 @@ def split_reports_in_df(df, report_col, drop=True):
 
     # für jede Zeile des DF
     for i in df.index:
-
         # Fortschritt anzeigen
         progress_temp = round((i / len_df) * 100)
         if progress_temp != progress:
@@ -390,7 +413,6 @@ def eval_splits(df, df_split, doc_name, n=False, frac=False):
     text_data_dicts = []
 
     for i, row in enumerate(df.index):
-
         link = df.loc[row, "article_link"]
         original_text = df.loc[row, "text"]
         newsroom_nr = df.loc[row, "newsroom_nr"]
@@ -439,7 +461,6 @@ def eval_splits(df, df_split, doc_name, n=False, frac=False):
 
         text_snippets = []
         for text_snippet in df_split[df_split["article_link"] == link]["text_snippet"]:
-
             text_snippets.append(text_snippet)
 
             txt_file = open(

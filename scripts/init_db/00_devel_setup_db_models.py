@@ -11,7 +11,7 @@ Base.metadata.drop_all(engine)
 Base.metadata.create_all(bind=engine)
 
 # Import legacy data into db
-output_folder_name = "ppp_bw"
+DATA_FOLDER_NAME = "ppp_bw"
 
 
 def import_newsroom_legacy_data(output_folder_name, engine):
@@ -53,4 +53,4 @@ def import_newsroom_legacy_data(output_folder_name, engine):
     df_visits.to_sql(name="newsroom_visits", con=engine, if_exists="append", index=False)
 
 
-import_newsroom_legacy_data(output_folder_name, engine)
+import_newsroom_legacy_data(DATA_FOLDER_NAME, engine)
