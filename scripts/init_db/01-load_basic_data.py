@@ -8,22 +8,17 @@ from sqlalchemy.exc import ProgrammingError
 
 import src
 from src import ppCleaner as ppc
-from src.models import Article, ArticleHTML, Base, Newsroom, Newsroom_visit
+from src.models import Article, Base, Newsroom, Newsroom_visit
 from src.ppSplitter import split_articles_and_add_reports_to_db
 
 DATA_FOLDER_NAME = "ppp_bw"
 
 
-def import_newsroom_legacy_data(output_folder_name, engine):
+def import_newsroom_legacy_data(legacy_data_path, engine):
     """
     Imports legacy csv files of newrooms to database
     """
-    folder_path = Path.joinpath(
-        src.PATH,
-        "output_data",
-        output_folder_name,
-        "departments",
-    )
+    folder_path = Path.joinpath(legacy_data_path, "departments")
 
     list_of_dfs = []
     for f in Path(folder_path).iterdir():
@@ -61,7 +56,7 @@ def import_newsroom_legacy_data(output_folder_name, engine):
     )
 
 
-def parse_newsroom(state, year, newsroom):
+def parse_newsroom(state, year, newsroom, legacy_data_path):
     global engine, Session
     session = Session()
 
@@ -89,6 +84,7 @@ def parse_newsroom(state, year, newsroom):
             scraped_at=crawled,
             daily_index=i,
             article_link=article_data["article_link"],
+            article_file=str(file.relative_to(legacy_data_path)),
             newsroom_nr=newsroom_nr,
             location=article_data["location"],
             header=article_data["header"],
@@ -102,7 +98,6 @@ def parse_newsroom(state, year, newsroom):
         article.newsroom_visit = (
             session.query(Newsroom_visit).filter_by(newsroom_id=room.id).one_or_none()
         )
-        article.article_html = ArticleHTML(html=content)
         session.add(article)
         split_articles_and_add_reports_to_db(article, session)
 
@@ -125,22 +120,25 @@ def add_final_indexes():
             pass
 
 
+def import_article_legacy_data(legacy_data_path):
+    archived_html_path = Path.joinpath(legacy_data_path, "articles", "raw_article_html")
+
+    for state in Path(archived_html_path).iterdir():
+        for year in state.iterdir():
+            for newsroom in year.iterdir():
+                pass
+                parse_newsroom(state, year, newsroom, legacy_data_path)
+
+
 def main():
     # Drops and recreates DB
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(bind=engine)
 
-    import_newsroom_legacy_data(DATA_FOLDER_NAME, engine)
+    legacy_data_path = Path.joinpath(src.PATH, "output_data", DATA_FOLDER_NAME)
 
-    data_folder_path = Path.joinpath(
-        src.PATH, "output_data", DATA_FOLDER_NAME, "articles", "raw_article_html"
-    )
-
-    for state in Path(data_folder_path).iterdir():
-        for year in state.iterdir():
-            for newsroom in year.iterdir():
-                parse_newsroom(state, year, newsroom)
-
+    import_newsroom_legacy_data(legacy_data_path, engine)
+    import_article_legacy_data(legacy_data_path)
     add_final_indexes()
 
 

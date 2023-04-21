@@ -35,6 +35,7 @@ class Article(Base, Str):
     scraped_at = Column(DateTime)
 
     article_link = Column(Text)
+    article_file = Column(Text)
     newsroom_nr = Column(Text)
     from_presseportal = Column(Text)
     location = Column(Text)
@@ -47,7 +48,6 @@ class Article(Base, Str):
 
     newsroom = relationship("Newsroom", back_populates="articles", uselist=False)
     newsroom_visit = relationship("Newsroom_visit", back_populates="articles")
-    article_html = relationship("ArticleHTML", back_populates="article", uselist=False)
     reports = relationship("Report", back_populates="article")
 
 
@@ -103,15 +103,6 @@ class Newsroom_visit(Base, Str):
 
     newsroom = relationship("Newsroom", back_populates="visits", uselist=False)
     articles = relationship("Article", back_populates="newsroom_visit")
-
-
-class ArticleHTML(Base, Str):
-    __tablename__ = "articles_html_raw"
-
-    article_id = Column(Integer, ForeignKey("articles.id"), primary_key=True)
-    html = Column(Text)
-
-    article = relationship("Article", back_populates="article_html")
 
 
 class Report(Base, Str):
