@@ -10,6 +10,7 @@ import src
 from src import ppCleaner as ppc
 from src.models import Article, Base, Newsroom, Newsroom_visit
 from src.ppSplitter import split_articles_and_add_reports_to_db
+from src import utils
 
 DATA_FOLDER_NAME = "ppp_bw"
 
@@ -60,6 +61,10 @@ def parse_newsroom(state, year, newsroom, legacy_data_path):
     global engine, Session
     session = Session()
 
+    # create logbook
+    logbook = utils.Logbook(legacy_data_path, "errorlog_article_import_" + utils.get_str_dt() + ".txt")
+
+    # check if newsroom already in db (obesolete?)
     room = session.query(Newsroom).filter_by(newsroom_nr=newsroom.name).one_or_none()
     if not room:
         room = Newsroom(
@@ -68,40 +73,64 @@ def parse_newsroom(state, year, newsroom, legacy_data_path):
         session.add(room)
 
     for file in newsroom.iterdir():
-        newsroom_nr, published, i, crawled = file.name.rstrip(".txt").split("_")
+        # Only access .txt files
+        if not file.suffix == ".txt":
+            continue
 
-        published = dt.datetime.strptime(published, "%Y-%m-%d")
-        crawled = dt.datetime.strptime(crawled, "%Y-%m-%d-%H-%M-%S")
-
-        content = file.read_text(encoding="utf-8")
-
-        html = bs(content, "html.parser")
-
-        article_data = ppc.extract_article_data(html, newsroom_nr)
-
-        article = Article(
-            date=published,
-            scraped_at=crawled,
-            daily_index=i,
-            article_link=article_data["article_link"],
-            article_file=str(file.relative_to(legacy_data_path)),
-            newsroom_nr=newsroom_nr,
-            location=article_data["location"],
-            header=article_data["header"],
-            text=article_data["text"],
-            location_tags_names=article_data["location_tags_names"],
-            location_tags_scores=article_data["location_tags_scores"],
-            topic_tags_names=article_data["topic_tags_names"],
-            topic_tags_scores=article_data["topic_tags_scores"],
+        # Check if Article is already in db
+        article_file = (
+            session.query(Article)
+            .filter_by(article_file=str(file.relative_to(legacy_data_path)))
+            .one_or_none()
         )
-        article.newsroom = room
-        article.newsroom_visit = (
-            session.query(Newsroom_visit).filter_by(newsroom_id=room.id).one_or_none()
-        )
-        session.add(article)
-        split_articles_and_add_reports_to_db(article, session)
 
-    session.commit()
+        # If Article in db, then  skip
+        if article_file:
+            logbook.write_entry(" already in db: " + article_file.article_file)
+            continue
+        
+        if not article_file:
+            try:
+                newsroom_nr, published, i, crawled = file.name.rstrip(".txt").split("_")
+
+                published = dt.datetime.strptime(published, "%Y-%m-%d")
+                crawled = dt.datetime.strptime(crawled, "%Y-%m-%d-%H-%M-%S")
+
+                content = file.read_text(encoding="utf-8")
+
+                html = bs(content, "html.parser")
+
+                article_data = ppc.extract_article_data(html, newsroom_nr)
+
+                article = Article(
+                    date=published,
+                    scraped_at=crawled,
+                    daily_index=i,
+                    article_link=article_data["article_link"],
+                    article_file=str(file.relative_to(legacy_data_path)),
+                    newsroom_nr=newsroom_nr,
+                    location=article_data["location"],
+                    header=article_data["header"],
+                    text=article_data["text"],
+                    location_tags_names=article_data["location_tags_names"],
+                    location_tags_scores=article_data["location_tags_scores"],
+                    topic_tags_names=article_data["topic_tags_names"],
+                    topic_tags_scores=article_data["topic_tags_scores"],
+                )
+                article.newsroom = room
+                article.newsroom_visit = (
+                    session.query(Newsroom_visit)
+                    .filter_by(newsroom_id=room.id)
+                    .one_or_none()
+                )
+                session.add(article)
+                split_articles_and_add_reports_to_db(article, session)
+                session.commit()
+                # if not inspect(article).pending:
+                #    file.rename(file.with_suffix('.txt'))
+            except:
+                logbook.write_entry(" error importing: " + article_file.article_file)
+
     session.close()
 
 
@@ -124,7 +153,9 @@ def import_article_legacy_data(legacy_data_path):
     archived_html_path = Path.joinpath(legacy_data_path, "articles", "raw_article_html")
 
     for state in Path(archived_html_path).iterdir():
+        print("Importing state: ", state.name)
         for year in state.iterdir():
+            print("Importing year: ", year.name)
             for newsroom in year.iterdir():
                 pass
                 parse_newsroom(state, year, newsroom, legacy_data_path)
@@ -139,7 +170,7 @@ def main():
 
     import_newsroom_legacy_data(legacy_data_path, engine)
     import_article_legacy_data(legacy_data_path)
-    add_final_indexes()
+    # add_final_indexes()
 
 
 if __name__ == "__main__":
