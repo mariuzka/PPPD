@@ -72,7 +72,11 @@ def parse_newsroom(state, year, newsroom, legacy_data_path):
         )
         session.add(room)
 
+    counter = 1
     for file in newsroom.iterdir():
+        print(counter)
+        counter = counter + 1
+
         # Only access .txt files
         if not file.suffix == ".txt":
             continue
@@ -87,6 +91,7 @@ def parse_newsroom(state, year, newsroom, legacy_data_path):
         # If Article in db, then  skip
         if article_file:
             logbook.write_entry(" already in db: " + article_file.article_file)
+            print("file already in db...")
             continue
         
         if not article_file:
@@ -126,10 +131,10 @@ def parse_newsroom(state, year, newsroom, legacy_data_path):
                 session.add(article)
                 split_articles_and_add_reports_to_db(article, session)
                 session.commit()
-                # if not inspect(article).pending:
-                #    file.rename(file.with_suffix('.txt'))
+
             except:
-                logbook.write_entry(" error importing: " + article_file.article_file)
+                logbook.write_entry(" error importing: " + file)
+                print("error with",  file)
 
     session.close()
 
