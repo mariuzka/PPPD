@@ -12,7 +12,11 @@ from src.models import Article, Base, Newsroom, Newsroom_visit
 from src.ppSplitter import split_articles_and_add_reports_to_db
 from src import utils
 
+import sys
+
 DATA_FOLDER_NAME = "ppp_bw"
+INIT = sys.argv [1]
+YEAR = sys.argv [2]
 
 
 def import_newsroom_legacy_data(legacy_data_path, engine):
@@ -62,7 +66,7 @@ def parse_newsroom(state, year, newsroom, legacy_data_path):
     session = Session()
 
     # create logbook
-    logbook = utils.Logbook(legacy_data_path, "errorlog_article_import_" + utils.get_str_dt() + ".txt")
+    logbook = utils.Logbook(legacy_data_path, "errorlog_article_import_" + utils.get_str_dt() + ".log")
 
     # check if newsroom already in db (obesolete?)
     room = session.query(Newsroom).filter_by(newsroom_nr=newsroom.name).one_or_none()
@@ -72,10 +76,7 @@ def parse_newsroom(state, year, newsroom, legacy_data_path):
         )
         session.add(room)
 
-    counter = 1
     for file in newsroom.iterdir():
-        print(counter)
-        counter = counter + 1
 
         # Only access .txt files
         if not file.suffix == ".txt":
@@ -90,7 +91,7 @@ def parse_newsroom(state, year, newsroom, legacy_data_path):
 
         # If Article in db, then  skip
         if article_file:
-            logbook.write_entry(" already in db: " + article_file.article_file)
+            logbook.write_entry(" already in db: " + str(file))
             print("file already in db...")
             continue
         
@@ -133,8 +134,8 @@ def parse_newsroom(state, year, newsroom, legacy_data_path):
                 session.commit()
 
             except:
-                logbook.write_entry(" error importing: " + file)
-                print("error with",  file)
+                logbook.write_entry(" error importing: " + str(file))
+                print("Error...")
 
     session.close()
 
@@ -160,20 +161,24 @@ def import_article_legacy_data(legacy_data_path):
     for state in Path(archived_html_path).iterdir():
         print("Importing state: ", state.name)
         for year in state.iterdir():
+            if year.name != YEAR:
+                continue
+
             print("Importing year: ", year.name)
             for newsroom in year.iterdir():
-                pass
                 parse_newsroom(state, year, newsroom, legacy_data_path)
 
 
 def main():
-    # Drops and recreates DB
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(bind=engine)
-
     legacy_data_path = Path.joinpath(src.PATH, "output_data", DATA_FOLDER_NAME)
-
-    import_newsroom_legacy_data(legacy_data_path, engine)
+    
+    if INIT=="init":
+        # Drops and recreates DB
+        Base.metadata.drop_all(engine)
+        Base.metadata.create_all(bind=engine)
+        
+        import_newsroom_legacy_data(legacy_data_path, engine)
+ 
     import_article_legacy_data(legacy_data_path)
     # add_final_indexes()
 
