@@ -15,8 +15,8 @@ from src import utils
 import sys
 
 DATA_FOLDER_NAME = "ppp_bw"
-INIT = sys.argv [1]
-YEAR = sys.argv [2]
+INIT = sys.argv[1] # str -> if 'init', db will be initialized from scratch
+YEAR = sys.argv[2] # int -> provide the year 
 
 
 def import_newsroom_legacy_data(legacy_data_path, engine):

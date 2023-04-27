@@ -44,11 +44,7 @@ ppr.get_blaulicht_data(
 ```
 
 
-**Update an existing output folder**
-
-... 
-
-## Database usage (work in progress)
+## Database usage
 
 If you want to use PostgreSQL as database, fire up a docker environment e.g. as provided in the `docker-compose.yml`: 
 
@@ -58,4 +54,12 @@ sudo docker-compose -f docker-compose.yml --env-file config.ini up -d
 
 Don't forget to provide the credentials within the `config.ini`.
 
-To import legacy data (from csv and txt files from the initial webscraping) rund script `01-load_basic_data.py` from the folder `scripts/init_db`. It creates the database and fills the tables (takes ~5-10 minutes).
+To import legacy data (from csv and txt files from the initial webscraping from folder `./output_data/ppp_bw/`) run the script `01-load_basic_data.py` from the folder `scripts/init_db`. It expects two cli arguments: The first specifies, whether the db should be initialized from scratch (old data will be deleted), the second argument specifies the year to import.
+
+```
+# First run to initialize the db and to import 2015 data:
+python 01-load_basic_data.py init 2015
+
+# Subsequent runs (data will be appended) for other years, e.g. 2019:
+python 01-load_basic_data.py append 2019
+```
